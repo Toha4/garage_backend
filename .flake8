@@ -1,0 +1,22 @@
+[flake8]
+ignore =
+  E203,  // Handled by black (Whitespace before ':' -- handled by black)
+  E266,  // Handled by black (Too many leading '#' for block comment)
+  E501,  // Handled by black (Line too long)
+  W503,  // Handled by black (Line break occured before a binary operator)
+  E402,  // Sometimes not possible due to execution order (Module level import is not at top of file)
+  N804,   // is a worse version of and conflicts with B902 (first argument of a classmethod should be named cls)
+  W293
+max-line-length = 119
+select = N,B,C,E,F,W,T4,B9
+exclude =
+      static,
+      migrations,
+      frontend,
+      .git,
+      __pycache__
+
+# We need to configure the mypy.ini because the flake8-mypy's default
+# options don't properly override it, so if we don't specify it we get
+# half of the config from mypy.ini and half from flake8-mypy.
+mypy_config = mypy.ini
