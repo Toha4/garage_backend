@@ -6,11 +6,11 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from app.helpers.testing import LoginAPITestCase
+from app.helpers.testing import AuthorizationAPITestCase
 from authentication.api.serializers import UserSerializer
 
 
-class UserApiTestCase(LoginAPITestCase):
+class UserApiTestCase(AuthorizationAPITestCase):
     def test_login(self):
         url = reverse("token-obtain")
         response = self.client.post(url, {"username": self.user.username, "password": self.user_password})
@@ -42,5 +42,4 @@ class UserApiTestCase(LoginAPITestCase):
         response = self.client.get(url)
 
         serializer_data = UserSerializer(self.user).data
-
         self.assertEqual(serializer_data, response.data)

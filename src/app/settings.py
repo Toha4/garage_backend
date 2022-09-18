@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "corsheaders",
 
     "authentication",
+    "handbooks",
 ]
 
 MIDDLEWARE = [
@@ -86,7 +87,18 @@ CORS_ORIGIN_WHITELIST = env("CORS_ORIGIN_WHITELIST", cast=str, default="http://l
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
-    "default": env.db()
+    "default": env.db(),
+    "mssql_sync": {
+        "NAME": "putewka",
+        "ENGINE": "sql_server.pyodbc",
+        "HOST": env("DATABASE_MSSQL_HOST", cast=str),
+        "USER": env("DATABASE_MSSQL_USER", cast=str),
+        "PASSWORD": env("DATABASE_MSSQL_PASSWORD", cast=str),
+        "OPTIONS": {
+            "driver": "ODBC Driver 17 for SQL Server",
+            "unicode_results": True,
+        },
+    }
 }
 
 

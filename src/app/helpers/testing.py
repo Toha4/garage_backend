@@ -4,7 +4,7 @@ from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import AccessToken
 
 
-class LoginAPITestCase(APITestCase):
+class AuthorizationAPITestCase(APITestCase):
     def setUp(self):
         # Create user and token for API
         user_model = get_user_model()
