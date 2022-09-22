@@ -1,3 +1,6 @@
+import copy
+import json
+
 from django.urls import reverse
 
 from rest_framework import status
@@ -17,6 +20,8 @@ from ...models import Order
 from ..factory import OrderFactory
 from ..factory import PostFactory
 from ..factory import ReasonFactory
+from ..factory import WorkCategoryFactory
+from ..factory import WorkFactory
 
 
 class OrderApiTestCase(AuthorizationAPITestCase):
@@ -174,24 +179,117 @@ class OrderApiTestCase(AuthorizationAPITestCase):
         car = CarFactory()
         driver = EmployeeFactory(type=1, position="Водитель")
         responsible = EmployeeFactory(number_in_kadry=2, type=3, position="Начальник")
+        work_category = WorkCategoryFactory()
+        work = WorkFactory(category=work_category)
+        mechanic = EmployeeFactory(number_in_kadry=3, type=2, position="Слесарь")
 
+        url = reverse("order-list")
+
+        # Order only
         payload = {
             "status": REQUEST,
             "reason": reason.pk,
             "date_begin": "19.09.2022 12:00",
-            "date_end": "",
+            "date_end": None,
             "post": post.pk,
             "car": car.pk,
             "driver": driver.pk,
             "responsible": responsible.pk,
             "odometer": 123000,
-            "note": "Тестовый заказ-наряд 123",
+            "note": "Тестовый заказ-наряд 1",
+            "order_works": [],
         }
 
-        url = reverse("order-list")
-        response = self.client.post(url, data=payload)
+        response = self.client.post(url, data=json.dumps(payload), content_type="application/json")
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertTrue(Order.objects.get(note=payload["note"]))
+
+        # Order with works
+        payload_with_works = copy.copy(payload)
+        payload_with_works["order_works"] = [
+            {
+                "pk": None,
+                "work": work.pk,
+                "quantity": 1,
+                "time_minutes": 120,
+                "note": "Тестовая работа",
+                "mechanics": [],
+            }
+        ]
+        payload_with_works["note"] = "Тестовый заказ-наряд 2"
+        response = self.client.post(url, data=json.dumps(payload_with_works), content_type="application/json")
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertTrue(Order.objects.get(note=payload_with_works["note"]))
+
+        # Order with duplicate works
+        payload_with_works_duplicate = copy.copy(payload)
+        payload_with_works_duplicate["order_works"] = [
+            {
+                "pk": None,
+                "work": work.pk,
+                "quantity": 1,
+                "time_minutes": 120,
+                "note": "Тестовая работа",
+                "mechanics": [],
+            },
+            {
+                "pk": None,
+                "work": work.pk,
+                "quantity": 1,
+                "time_minutes": 120,
+                "note": "Тестовая работа",
+                "mechanics": [],
+            },
+        ]
+        payload_with_works_duplicate["note"] = "Тестовый заказ-наряд 3"
+        response = self.client.post(
+            url, data=json.dumps(payload_with_works_duplicate), content_type="application/json"
+        )
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        with self.assertRaises(Order.DoesNotExist):
+            Order.objects.get(note=payload_with_works_duplicate["note"])
+
+        # Order with works and mechanics
+        payload_with_works_mechanics = copy.copy(payload)
+        payload_with_works_mechanics["order_works"] = [
+            {
+                "pk": None,
+                "work": work.pk,
+                "quantity": 1,
+                "time_minutes": 120,
+                "note": "Тестовая работа",
+                "mechanics": [{"pk": None, "mechanic": mechanic.pk, "time_minutes": 60}],
+            }
+        ]
+        payload_with_works_mechanics["note"] = "Тестовый заказ-наряд 4"
+        response = self.client.post(
+            url, data=json.dumps(payload_with_works_mechanics), content_type="application/json"
+        )
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertTrue(Order.objects.get(note=payload_with_works_mechanics["note"]))
+
+        # Order with works and duplicate mechanics
+        payload_with_works_mechanics_duplicate = copy.copy(payload)
+        payload_with_works_mechanics_duplicate["order_works"] = [
+            {
+                "pk": None,
+                "work": work.pk,
+                "quantity": 1,
+                "time_minutes": 120,
+                "note": "Тестовая работа",
+                "mechanics": [
+                    {"pk": None, "mechanic": mechanic.pk, "time_minutes": 60},
+                    {"pk": None, "mechanic": mechanic.pk, "time_minutes": 60},
+                ],
+            }
+        ]
+        payload_with_works_mechanics_duplicate["note"] = "Тестовый заказ-наряд 5"
+        response = self.client.post(
+            url, data=json.dumps(payload_with_works_mechanics_duplicate), content_type="application/json"
+        )
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        with self.assertRaises(Order.DoesNotExist):
+            Order.objects.get(note=payload_with_works_mechanics_duplicate["note"])
 
     def test_get(self):
         reason = ReasonFactory()

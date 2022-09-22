@@ -1,11 +1,17 @@
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 
+from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework.serializers import DateTimeField
 from rest_framework.serializers import ModelSerializer
 from rest_framework.serializers import SerializerMethodField
 
 from ..constants import ORDER_STATUS
+from ..helpers.validators_order import validator_mechanics_order_work
+from ..helpers.validators_order import validator_order_works
 from ..models import Order
+from ..models import OrderWork
+from ..models import OrderWorkMechanic
 from ..models import Post
 from ..models import Reason
 from ..models import Work
@@ -70,11 +76,37 @@ class OrderListSerializer(ModelSerializer):
         return obj.reason.name
 
 
-class OrderDetailSerializer(ModelSerializer):
+class OrderWorkMechanickSerializer(ModelSerializer):
+    class Meta:
+        model = OrderWorkMechanic
+        fields = (
+            "pk",
+            "mechanic",
+            "time_minutes",
+        )
+
+
+class OrderWorkSerializer(WritableNestedModelSerializer):
+    mechanics = OrderWorkMechanickSerializer(many=True)
+
+    class Meta:
+        model = OrderWork
+        fields = (
+            "pk",
+            "work",
+            "quantity",
+            "time_minutes",
+            "note",
+            "mechanics",
+        )
+
+
+class OrderDetailSerializer(WritableNestedModelSerializer):
     created = DateTimeField(**settings.SERIALIZER_DATETIME_PARAMS, read_only=True)
     updated = DateTimeField(**settings.SERIALIZER_DATETIME_PARAMS, read_only=True)
     date_begin = DateTimeField(**settings.SERIALIZER_DATETIME_PARAMS)
     date_end = DateTimeField(**settings.SERIALIZER_DATETIME_PARAMS, required=False, allow_null=True)
+    order_works = OrderWorkSerializer(many=True)
 
     class Meta:
         model = Order
@@ -93,8 +125,21 @@ class OrderDetailSerializer(ModelSerializer):
             "responsible",
             "odometer",
             "note",
+            "order_works",
         )
         read_only_fields = ("number",)
+
+    def validate(self, data):
+        order_works = data.get("order_works")
+        if order_works:
+            validator_order_works(order_works)
+
+            for order_work in order_works:
+                mechanics = order_work.get("mechanics")
+                if mechanics:
+                    validator_mechanics_order_work(mechanics, order_work.get("work").pk)
+
+        return data
 
 
 class WorkCategorySerializer(ModelSerializer):

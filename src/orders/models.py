@@ -132,7 +132,7 @@ class OrderWork(models.Model):
 
 class OrderWorkMechanic(models.Model):
     order_work = models.ForeignKey(
-        OrderWork, verbose_name="Работа", on_delete=models.CASCADE, related_name="order_works"
+        OrderWork, verbose_name="Работа", on_delete=models.CASCADE, related_name="mechanics"
     )
     mechanic = models.ForeignKey(
         "core.Employee",

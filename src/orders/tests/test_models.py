@@ -1,3 +1,4 @@
+from django.db.models import CASCADE
 from django.db.models import PROTECT
 from django.test import TestCase
 
@@ -8,6 +9,8 @@ from ..constants import ORDER_STATUS
 from ..constants import REASON_TYPE
 from ..models import Order
 from .factory import OrderFactory
+from .factory import OrderWorkFactory
+from .factory import OrderWorkMechanicFactory
 from .factory import PostFactory
 from .factory import ReasonFactory
 from .factory import WorkCategoryFactory
@@ -139,3 +142,51 @@ class WorkModelTestCase(TestCase):
 
         category_on_delete = self.work._meta.get_field("category").remote_field.on_delete
         self.assertEqual(category_on_delete, PROTECT)
+
+
+class OrderWorkModelTestCase(TestCase):
+    def setUp(self):
+        reason = ReasonFactory()
+        car = CarFactory()
+        order = OrderFactory(reason=reason, car=car)
+        work_category = WorkCategoryFactory()
+        work = WorkFactory(category=work_category)
+        self.order_work = OrderWorkFactory(order=order, work=work)
+
+    def test_fields(self):
+        order_on_delete = self.order_work._meta.get_field("order").remote_field.on_delete
+        self.assertEqual(order_on_delete, CASCADE)
+
+        work_on_delete = self.order_work._meta.get_field("work").remote_field.on_delete
+        self.assertEqual(work_on_delete, PROTECT)
+
+        time_minutes_null = self.order_work._meta.get_field("time_minutes").null
+        self.assertEqual(time_minutes_null, True)
+
+        time_minutes_blank = self.order_work._meta.get_field("time_minutes").blank
+        self.assertEqual(time_minutes_blank, True)
+
+
+class OrderWorkMechanicModelTestCase(TestCase):
+    def setUp(self):
+        reason = ReasonFactory()
+        car = CarFactory()
+        order = OrderFactory(reason=reason, car=car)
+        work_category = WorkCategoryFactory()
+        work = WorkFactory(category=work_category)
+        order_work = OrderWorkFactory(order=order, work=work)
+        mechanic = EmployeeFactory(type=2, position="Слесарь")
+        self.order_work_mechanic = OrderWorkMechanicFactory(order_work=order_work, mechanic=mechanic)
+
+    def test_fields(self):
+        order_work_on_delete = self.order_work_mechanic._meta.get_field("order_work").remote_field.on_delete
+        self.assertEqual(order_work_on_delete, CASCADE)
+
+        mechanic_on_delete = self.order_work_mechanic._meta.get_field("mechanic").remote_field.on_delete
+        self.assertEqual(mechanic_on_delete, PROTECT)
+
+        time_minutes_null = self.order_work_mechanic._meta.get_field("time_minutes").null
+        self.assertEqual(time_minutes_null, True)
+
+        time_minutes_blank = self.order_work_mechanic._meta.get_field("time_minutes").blank
+        self.assertEqual(time_minutes_blank, True)

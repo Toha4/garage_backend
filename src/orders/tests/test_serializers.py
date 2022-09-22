@@ -11,6 +11,8 @@ from ..api.serializers import ReasonSerializer
 from ..api.serializers import WorkCategorySerializer
 from ..api.serializers import WorkSerializer
 from .factory import OrderFactory
+from .factory import OrderWorkFactory
+from .factory import OrderWorkMechanicFactory
 from .factory import PostFactory
 from .factory import ReasonFactory
 from .factory import WorkCategoryFactory
@@ -70,6 +72,11 @@ class OrderSerializerTestCase(TestCase):
         driver = EmployeeFactory(type=1, position="Водитель")
         responsible = EmployeeFactory(number_in_kadry=2, type=3, position="Начальник")
         order = OrderFactory(reason=reason, post=post, car=car, driver=driver, responsible=responsible)
+        work_category = WorkCategoryFactory()
+        work = WorkFactory(category=work_category)
+        order_work = OrderWorkFactory(order=order, work=work)
+        mechanic = EmployeeFactory(number_in_kadry=3, type=2, position="Слесарь")
+        order_work_mechanic = OrderWorkMechanicFactory(order_work=order_work, mechanic=mechanic)
 
         data = OrderDetailSerializer(order).data
         expected_data = {
@@ -87,6 +94,18 @@ class OrderSerializerTestCase(TestCase):
             "responsible": responsible.pk,
             "odometer": 123000,
             "note": "Тестовый заказ-наряд",
+            "order_works": [
+                {
+                    "pk": order_work.pk,
+                    "work": order_work.work.pk,
+                    "quantity": 1,
+                    "time_minutes": 120,
+                    "note": "Тестовая работа",
+                    "mechanics": [
+                        {"pk": order_work_mechanic.pk, "mechanic": order_work_mechanic.mechanic.pk, "time_minutes": 60}
+                    ],
+                }
+            ],
         }
         self.assertEqual(expected_data, data)
 

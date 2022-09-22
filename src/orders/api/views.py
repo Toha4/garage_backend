@@ -10,7 +10,7 @@ from rest_framework.response import Response
 
 from app.helpers.database import get_period_filter_lookup
 from app.views import EagerLoadingMixin
-from orders.helpers.order_general_search import order_general_search
+from ..helpers.order_general_search import order_general_search
 
 from ..models import Order
 from ..models import Post
