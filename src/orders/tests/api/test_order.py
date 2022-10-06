@@ -76,23 +76,23 @@ class OrderApiTestCase(AuthorizationAPITestCase):
         }
         self.assertEqual(serializer_data, response.data)
 
-        # reasons_filter
-        response_reasons_filter = self.client.get(url, {"reasons": reason2.pk})
+        # reason_type_filter
+        response_reasons_filter = self.client.get(url, {"reason_type": reason1.type})
         self.assertEqual(status.HTTP_200_OK, response_reasons_filter.status_code)
-        queryset = Order.objects.filter(reason__pk__in=[reason2.pk])
+        queryset = Order.objects.filter(reason__type__in=[reason1.type])
         serializer_data = {
             "links": {"next": None, "previous": None},
             "numbers": {"current": 1, "previous": None, "next": None},
-            "count": 1,
+            "count": 2,
             "page_size": 50,
             "results": OrderListSerializer(queryset, many=True).data,
         }
         self.assertEqual(serializer_data, response_reasons_filter.data)
 
         # status_filter
-        response_status_filter = self.client.get(url, {"status": COMPLETED})
+        response_status_filter = self.client.get(url, {"statuses": ",".join(str(i) for i in[COMPLETED,])})
         self.assertEqual(status.HTTP_200_OK, response_status_filter.status_code)
-        queryset = Order.objects.filter(status=COMPLETED)
+        queryset = Order.objects.filter(status__in=[COMPLETED])
         serializer_data = {
             "links": {"next": None, "previous": None},
             "numbers": {"current": 1, "previous": None, "next": None},
@@ -105,8 +105,8 @@ class OrderApiTestCase(AuthorizationAPITestCase):
         # date_filter
         date_begin = "15.01.2022"
         date_end = "20.01.2022"
-        response_status_filter = self.client.get(url, {"date_begin": date_begin, "date_end": date_end})
-        self.assertEqual(status.HTTP_200_OK, response_status_filter.status_code)
+        response_date_filter = self.client.get(url, {"date_begin": date_begin, "date_end": date_end})
+        self.assertEqual(status.HTTP_200_OK, response_date_filter.status_code)
         queryset = Order.objects.filter(get_period_filter_lookup("date_begin", date_begin, date_end, True))
         serializer_data = {
             "links": {"next": None, "previous": None},
@@ -115,12 +115,12 @@ class OrderApiTestCase(AuthorizationAPITestCase):
             "page_size": 50,
             "results": OrderListSerializer(queryset, many=True).data,
         }
-        self.assertEqual(serializer_data, response_status_filter.data)
+        self.assertEqual(serializer_data, response_date_filter.data)
 
         # number_searsh
         number = str(order3.number)
-        response_status_filter = self.client.get(url, {"general_search": number})
-        self.assertEqual(status.HTTP_200_OK, response_status_filter.status_code)
+        response_number_search = self.client.get(url, {"general_search": number})
+        self.assertEqual(status.HTTP_200_OK, response_number_search.status_code)
         queryset = order_general_search(Order.objects.all(), number)
         serializer_data = {
             "links": {"next": None, "previous": None},
@@ -129,12 +129,12 @@ class OrderApiTestCase(AuthorizationAPITestCase):
             "page_size": 50,
             "results": OrderListSerializer(queryset, many=True).data,
         }
-        self.assertEqual(serializer_data, response_status_filter.data)
+        self.assertEqual(serializer_data, response_number_search.data)
 
         # car_state_number_search
         car_state_number = "Б666ББ"
-        response_status_filter = self.client.get(url, {"general_search": car_state_number})
-        self.assertEqual(status.HTTP_200_OK, response_status_filter.status_code)
+        response_car_state_number_search = self.client.get(url, {"general_search": car_state_number})
+        self.assertEqual(status.HTTP_200_OK, response_car_state_number_search.status_code)
         queryset = order_general_search(Order.objects.all(), car_state_number)
         serializer_data = {
             "links": {"next": None, "previous": None},
@@ -143,12 +143,12 @@ class OrderApiTestCase(AuthorizationAPITestCase):
             "page_size": 50,
             "results": OrderListSerializer(queryset, many=True).data,
         }
-        self.assertEqual(serializer_data, response_status_filter.data)
+        self.assertEqual(serializer_data, response_car_state_number_search.data)
 
         # car_name_search
         car_name = "камаз"
-        response_status_filter = self.client.get(url, {"general_search": car_name})
-        self.assertEqual(status.HTTP_200_OK, response_status_filter.status_code)
+        response_car_name_search = self.client.get(url, {"general_search": car_name})
+        self.assertEqual(status.HTTP_200_OK, response_car_name_search.status_code)
         queryset = order_general_search(Order.objects.all(), car_name)
         serializer_data = {
             "links": {"next": None, "previous": None},
@@ -157,12 +157,26 @@ class OrderApiTestCase(AuthorizationAPITestCase):
             "page_size": 50,
             "results": OrderListSerializer(queryset, many=True).data,
         }
-        self.assertEqual(serializer_data, response_status_filter.data)
+        self.assertEqual(serializer_data, response_car_name_search.data)
+
+        # reason_name_search
+        reason_name = "Ремонт электрооборудования"
+        response_reason_name_search = self.client.get(url, {"general_search": reason_name})
+        self.assertEqual(status.HTTP_200_OK, response_reason_name_search.status_code)
+        queryset = order_general_search(Order.objects.all(), reason_name)
+        serializer_data = {
+            "links": {"next": None, "previous": None},
+            "numbers": {"current": 1, "previous": None, "next": None},
+            "count": 1,
+            "page_size": 50,
+            "results": OrderListSerializer(queryset, many=True).data,
+        }
+        self.assertEqual(serializer_data, response_reason_name_search.data)
 
         # note_search
         note = "Поломка"
-        response_status_filter = self.client.get(url, {"general_search": note})
-        self.assertEqual(status.HTTP_200_OK, response_status_filter.status_code)
+        response_note_search = self.client.get(url, {"general_search": note})
+        self.assertEqual(status.HTTP_200_OK, response_note_search.status_code)
         queryset = order_general_search(Order.objects.all(), note)
         serializer_data = {
             "links": {"next": None, "previous": None},
@@ -171,7 +185,7 @@ class OrderApiTestCase(AuthorizationAPITestCase):
             "page_size": 50,
             "results": OrderListSerializer(queryset, many=True).data,
         }
-        self.assertEqual(serializer_data, response_status_filter.data)
+        self.assertEqual(serializer_data, response_note_search.data)
 
     def test_create(self):
         reason = ReasonFactory()

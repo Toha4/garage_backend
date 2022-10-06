@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.utils.translation import gettext_lazy as _
 
 from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework.serializers import DateTimeField
@@ -28,6 +27,16 @@ class ReasonSerializer(ModelSerializer):
         )
 
 
+class ReasonListSerializer(ReasonSerializer):
+    delete_forbidden = SerializerMethodField()
+
+    class Meta(ReasonSerializer.Meta):
+        fields = ReasonSerializer.Meta.fields + ("delete_forbidden",)
+
+    def get_delete_forbidden(self, obj):
+        return obj.orders.all().exists()
+
+
 class PostSerializer(ModelSerializer):
     class Meta:
         model = Post
@@ -37,8 +46,18 @@ class PostSerializer(ModelSerializer):
         )
 
 
+class PostListSerializer(PostSerializer):
+    delete_forbidden = SerializerMethodField()
+
+    class Meta(PostSerializer.Meta):
+        fields = PostSerializer.Meta.fields + ("delete_forbidden",)
+
+    def get_delete_forbidden(self, obj):
+        return obj.orders.all().exists()
+
+
 class OrderListSerializer(ModelSerializer):
-    date_begin = DateTimeField(**settings.SERIALIZER_DATETIME_PARAMS)
+    date_begin = DateTimeField(**settings.SERIALIZER_DATE_PARAMS)
     status_name = SerializerMethodField()
     car_name = SerializerMethodField()
     car_state_number = SerializerMethodField()
@@ -70,7 +89,9 @@ class OrderListSerializer(ModelSerializer):
         return obj.car.state_number
 
     def get_post_name(self, obj):
-        return obj.post.name
+        if obj.post:
+            return obj.post.name
+        return ""
 
     def get_reason_name(self, obj):
         return obj.reason.name
@@ -88,17 +109,27 @@ class OrderWorkMechanickSerializer(ModelSerializer):
 
 class OrderWorkSerializer(WritableNestedModelSerializer):
     mechanics = OrderWorkMechanickSerializer(many=True)
+    work_name = SerializerMethodField()
+    work_category = SerializerMethodField()
 
     class Meta:
         model = OrderWork
         fields = (
             "pk",
             "work",
+            "work_name",
+            "work_category",
             "quantity",
             "time_minutes",
             "note",
             "mechanics",
         )
+
+    def get_work_name(self, obj):
+        return obj.work.name
+
+    def get_work_category(self, obj):
+        return obj.work.category.pk
 
 
 class OrderDetailSerializer(WritableNestedModelSerializer):
@@ -107,6 +138,7 @@ class OrderDetailSerializer(WritableNestedModelSerializer):
     date_begin = DateTimeField(**settings.SERIALIZER_DATETIME_PARAMS)
     date_end = DateTimeField(**settings.SERIALIZER_DATETIME_PARAMS, required=False, allow_null=True)
     order_works = OrderWorkSerializer(many=True)
+    car_name = SerializerMethodField()
 
     class Meta:
         model = Order
@@ -121,6 +153,7 @@ class OrderDetailSerializer(WritableNestedModelSerializer):
             "date_end",
             "post",
             "car",
+            "car_name",
             "driver",
             "responsible",
             "odometer",
@@ -128,6 +161,9 @@ class OrderDetailSerializer(WritableNestedModelSerializer):
             "order_works",
         )
         read_only_fields = ("number",)
+
+    def get_car_name(self, obj):
+        return obj.car.name
 
     def validate(self, data):
         order_works = data.get("order_works")
@@ -151,6 +187,16 @@ class WorkCategorySerializer(ModelSerializer):
         )
 
 
+class WorkCategoryListSerializer(WorkCategorySerializer):
+    work_count = SerializerMethodField()
+
+    class Meta(WorkCategorySerializer.Meta):
+        fields = WorkCategorySerializer.Meta.fields + ("work_count",)
+
+    def get_work_count(self, obj):
+        return Work.objects.filter(category=obj).count()
+
+
 class WorkSerializer(ModelSerializer):
     class Meta:
         model = Work
@@ -159,3 +205,13 @@ class WorkSerializer(ModelSerializer):
             "category",
             "name",
         )
+
+
+class WorkListSerializer(WorkSerializer):
+    delete_forbidden = SerializerMethodField()
+
+    class Meta(WorkSerializer.Meta):
+        fields = WorkSerializer.Meta.fields + ("delete_forbidden",)
+
+    def get_delete_forbidden(self, obj):
+        return obj.order_works.all().exists()

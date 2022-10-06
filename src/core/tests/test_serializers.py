@@ -25,6 +25,7 @@ class CarSerializerTestCase(TestCase):
             "state_number": "А 777 АА",
             "name": "УАЗ 111",
             "kod_driver": 11,
+            "driver_pk": None,
             "date_decommissioned": None,
         }
         self.assertEqual(expected_data, data)

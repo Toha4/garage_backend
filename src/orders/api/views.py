@@ -10,8 +10,8 @@ from rest_framework.response import Response
 
 from app.helpers.database import get_period_filter_lookup
 from app.views import EagerLoadingMixin
-from ..helpers.order_general_search import order_general_search
 
+from ..helpers.order_general_search import order_general_search
 from ..models import Order
 from ..models import Post
 from ..models import Reason
@@ -19,9 +19,13 @@ from ..models import Work
 from ..models import WorkCategory
 from .serializers import OrderDetailSerializer
 from .serializers import OrderListSerializer
+from .serializers import PostListSerializer
 from .serializers import PostSerializer
+from .serializers import ReasonListSerializer
 from .serializers import ReasonSerializer
+from .serializers import WorkCategoryListSerializer
 from .serializers import WorkCategorySerializer
+from .serializers import WorkListSerializer
 from .serializers import WorkSerializer
 
 
@@ -30,6 +34,20 @@ class ReasonListView(CreateModelMixin, GenericAPIView):
 
     serializer_class = ReasonSerializer
     queryset = Reason.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return ReasonListSerializer
+        return ReasonSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        search_name = self.request.query_params.get("search_name")
+        if search_name:
+            queryset = queryset.filter(name__icontains=search_name)
+
+        return queryset
 
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -66,8 +84,12 @@ class ReasonDetailView(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, 
 class PostListView(CreateModelMixin, GenericAPIView):
     """Список постов"""
 
-    serializer_class = PostSerializer
     queryset = Post.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return PostListSerializer
+        return PostSerializer
 
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -119,13 +141,13 @@ class OrderListView(EagerLoadingMixin, ListAPIView, CreateModelMixin):
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        reasons = self.request.query_params.get("reasons")
-        if reasons:
-            queryset = queryset.filter(reason__pk__in=[int(reason) for reason in reasons.split(",")])
+        reason_type = self.request.query_params.get("reason_type")
+        if reason_type:
+            queryset = queryset.filter(reason__type=reason_type)
 
-        status = self.request.query_params.get("status")
-        if status:
-            queryset = queryset.filter(status=status)
+        statuses = self.request.query_params.get("statuses")
+        if statuses:
+            queryset = queryset.filter(status__in=[int(status) for status in statuses.split(",")])
 
         date_begin = self.request.query_params.get("date_begin")
         date_end = self.request.query_params.get("date_end")
@@ -135,6 +157,12 @@ class OrderListView(EagerLoadingMixin, ListAPIView, CreateModelMixin):
         general_search = self.request.query_params.get("general_search")
         if general_search:
             queryset = order_general_search(queryset, str(general_search))
+
+        sort_field = self.request.query_params.get("sortField")
+        sort_order = self.request.query_params.get("sortOrder")
+        if sort_field and sort_order:
+            sort_order = "-" if sort_order == "descend" else ""
+            queryset = queryset.order_by(f"{sort_order}{sort_field}", "pk")
 
         return queryset
 
@@ -168,8 +196,12 @@ class OrderDetailView(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, G
 class WorkCategoryListView(CreateModelMixin, GenericAPIView):
     """Список категорий работ"""
 
-    serializer_class = WorkCategorySerializer
     queryset = WorkCategory.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return WorkCategoryListSerializer
+        return WorkCategorySerializer
 
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -208,10 +240,15 @@ class WorkListView(CreateModelMixin, GenericAPIView):
     Список работ
 
     Filters: category(int)
+    Search's: name
     """
 
-    serializer_class = WorkSerializer
     queryset = Work.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return WorkListSerializer
+        return WorkSerializer
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -219,6 +256,10 @@ class WorkListView(CreateModelMixin, GenericAPIView):
         category = self.request.query_params.get("category")
         if category:
             queryset = queryset.filter(category__pk=category)
+
+        search_name = self.request.query_params.get("search_name")
+        if search_name:
+            queryset = queryset.filter(name__icontains=search_name)
 
         return queryset
 

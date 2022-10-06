@@ -6,9 +6,13 @@ from core.tests.factory import EmployeeFactory
 
 from ..api.serializers import OrderDetailSerializer
 from ..api.serializers import OrderListSerializer
+from ..api.serializers import PostListSerializer
 from ..api.serializers import PostSerializer
+from ..api.serializers import ReasonListSerializer
 from ..api.serializers import ReasonSerializer
+from ..api.serializers import WorkCategoryListSerializer
 from ..api.serializers import WorkCategorySerializer
+from ..api.serializers import WorkListSerializer
 from ..api.serializers import WorkSerializer
 from .factory import OrderFactory
 from .factory import OrderWorkFactory
@@ -31,6 +35,19 @@ class ReasonSerializerTestCase(TestCase):
         self.assertEqual(expected_data, data)
 
 
+class ReasonListSerializerTestCase(TestCase):
+    def test_ok(self):
+        reason = ReasonFactory()
+        data = ReasonListSerializer(reason).data
+        expected_data = {
+            "pk": reason.pk,
+            "name": "ТО",
+            "type": 1,
+            "delete_forbidden": False,
+        }
+        self.assertEqual(expected_data, data)
+
+
 class PostSerializerTestCase(TestCase):
     def test_ok(self):
         post = PostFactory()
@@ -38,6 +55,18 @@ class PostSerializerTestCase(TestCase):
         expected_data = {
             "pk": post.pk,
             "name": "Бокс 1",
+        }
+        self.assertEqual(expected_data, data)
+
+
+class PostListSerializerTestCase(TestCase):
+    def test_ok(self):
+        post = PostFactory()
+        data = PostListSerializer(post).data
+        expected_data = {
+            "pk": post.pk,
+            "name": "Бокс 1",
+            "delete_forbidden": False,
         }
         self.assertEqual(expected_data, data)
 
@@ -90,6 +119,7 @@ class OrderSerializerTestCase(TestCase):
             "date_end": None,
             "post": post.pk,
             "car": car.pk,
+            "car_name": car.name,
             "driver": driver.pk,
             "responsible": responsible.pk,
             "odometer": 123000,
@@ -98,6 +128,8 @@ class OrderSerializerTestCase(TestCase):
                 {
                     "pk": order_work.pk,
                     "work": order_work.work.pk,
+                    "work_name": order_work.work.name,
+                    "work_category": order_work.work.category.pk,
                     "quantity": 1,
                     "time_minutes": 120,
                     "note": "Тестовая работа",
@@ -121,6 +153,19 @@ class WorkCategorySerializerTestCase(TestCase):
         self.assertEqual(expected_data, data)
 
 
+class WorkCategoryListSerializerTestCase(TestCase):
+    def test_ok(self):
+        work_category = WorkCategoryFactory()
+        WorkFactory(category=work_category)
+        data = WorkCategoryListSerializer(work_category).data
+        expected_data = {
+            "pk": work_category.pk,
+            "name": "Электрика",
+            "work_count": 1,
+        }
+        self.assertEqual(expected_data, data)
+
+
 class WorkSerializerTestCase(TestCase):
     def test_ok(self):
         work_category = WorkCategoryFactory()
@@ -130,5 +175,19 @@ class WorkSerializerTestCase(TestCase):
             "pk": work.pk,
             "name": "Замена аккумулятора",
             "category": work_category.pk,
+        }
+        self.assertEqual(expected_data, data)
+
+
+class WorkListSerializerTestCase(TestCase):
+    def test_ok(self):
+        work_category = WorkCategoryFactory()
+        work = WorkFactory(category=work_category)
+        data = WorkListSerializer(work).data
+        expected_data = {
+            "pk": work.pk,
+            "name": "Замена аккумулятора",
+            "category": work_category.pk,
+            "delete_forbidden": False,
         }
         self.assertEqual(expected_data, data)

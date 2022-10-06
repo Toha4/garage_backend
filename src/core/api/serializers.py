@@ -2,6 +2,7 @@ from django.conf import settings
 
 from rest_framework.serializers import DateField
 from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import SerializerMethodField
 
 from ..models import Car
 from ..models import Employee
@@ -19,6 +20,7 @@ class CarShortSerializer(ModelSerializer):
 
 class CarDetailSerializer(ModelSerializer):
     date_decommissioned = DateField(**settings.SERIALIZER_DATE_PARAMS, required=False, allow_null=True, read_only=True)
+    driver_pk = SerializerMethodField()
 
     class Meta:
         model = Car
@@ -29,6 +31,7 @@ class CarDetailSerializer(ModelSerializer):
             "state_number",
             "name",
             "kod_driver",
+            "driver_pk",
             "date_decommissioned",
         )
         read_only_fields = (
@@ -39,6 +42,13 @@ class CarDetailSerializer(ModelSerializer):
             "kod_driver",
             "date_decommissioned",
         )
+
+    def get_driver_pk(self, obj):
+        if obj.kod_driver:
+            employee = Employee.objects.filter(number_in_kadry=obj.kod_driver).first()
+            if employee:
+                return employee.pk
+        return None
 
 
 class EmployeeShortSerializer(ModelSerializer):

@@ -12,6 +12,7 @@ def order_general_search(queryset, search: str):
             | Q(car__state_number__icontains=search)
             | Q(state_number_without_whitespace__icontains=search)
             | Q(car__name__icontains=search)
+            | Q(reason__name__icontains=search)
             | Q(note__icontains=search)
         )
     )

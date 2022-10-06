@@ -4,6 +4,7 @@ from rest_framework import status
 
 from app.helpers.testing import AuthorizationAPITestCase
 
+from ...api.serializers import PostListSerializer
 from ...api.serializers import PostSerializer
 from ...models import Post
 from ..factory import PostFactory
@@ -19,7 +20,7 @@ class PostApiTestCase(AuthorizationAPITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         queryset = Post.objects.filter(pk__in=[post1.pk, post2.pk])
-        serializer_data = PostSerializer(queryset, many=True).data
+        serializer_data = PostListSerializer(queryset, many=True).data
         self.assertEqual(serializer_data, response.data)
 
     def test_create(self):

@@ -4,6 +4,7 @@ from rest_framework import status
 
 from app.helpers.testing import AuthorizationAPITestCase
 
+from ...api.serializers import WorkListSerializer
 from ...api.serializers import WorkSerializer
 from ...models import Work
 from ..factory import WorkCategoryFactory
@@ -23,15 +24,21 @@ class WorkApiTestCase(AuthorizationAPITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         queryset = Work.objects.filter(pk__in=[work1.pk, work2.pk, work3.pk])
-        serializer_data = WorkSerializer(queryset, many=True).data
+        serializer_data = WorkListSerializer(queryset, many=True).data
         self.assertEqual(serializer_data, response.data)
 
         # category_filter
         response_category_filter = self.client.get(url, {"category": work_category2.pk})
         self.assertEqual(status.HTTP_200_OK, response_category_filter.status_code)
         queryset = Work.objects.filter(category=work_category2.pk)
-        serializer_data = WorkSerializer(queryset, many=True).data
+        serializer_data = WorkListSerializer(queryset, many=True).data
         self.assertEqual(serializer_data, response_category_filter.data)
+
+        # name_search
+        response_name_search = self.client.get(url, {"search_name": "масла"})
+        self.assertEqual(status.HTTP_200_OK, response_name_search.status_code)
+        serializer_data = WorkListSerializer([work2], many=True).data
+        self.assertEqual(serializer_data, response_name_search.data)
 
     def test_create(self):
         work_category = WorkCategoryFactory()

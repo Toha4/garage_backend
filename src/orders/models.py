@@ -80,7 +80,7 @@ class Order(TimestampModel):
     class Meta:
         verbose_name = "Заказ-наряд"
         verbose_name_plural = "Заказ-наряды"
-        ordering = ("number",)
+        ordering = ("-number",)
 
     def save(self, *args, **kwargs):
         if self.number is None:

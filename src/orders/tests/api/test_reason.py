@@ -4,6 +4,7 @@ from rest_framework import status
 
 from app.helpers.testing import AuthorizationAPITestCase
 
+from ...api.serializers import ReasonListSerializer
 from ...api.serializers import ReasonSerializer
 from ...models import Reason
 from ..factory import ReasonFactory
@@ -20,8 +21,16 @@ class ReasonApiTestCase(AuthorizationAPITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         queryset = Reason.objects.filter(pk__in=[reason1.pk, reason2.pk, reason3.pk])
-        serializer_data = ReasonSerializer(queryset, many=True).data
+        serializer_data = ReasonListSerializer(queryset, many=True).data
         self.assertEqual(serializer_data, response.data)
+
+        # name_search
+        response_name_search = self.client.get(url, {"search_name": "Ремонт"})
+        self.assertEqual(status.HTTP_200_OK, response_name_search.status_code)
+        serializer_data = ReasonListSerializer([reason2], many=True).data
+        self.assertEqual(serializer_data, response_name_search.data)
+
+
 
     def test_create(self):
         payload = {"name": "TO", "type": 1}
