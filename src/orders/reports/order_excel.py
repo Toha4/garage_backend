@@ -39,7 +39,7 @@ class OrderExcelCreator:
         path = f"{settings.MEDIA_ROOT}/temp"
         today = datetime.today()
 
-        order_number = "__" if self.__order else self.__order.number
+        order_number = "__" if not self.__order else self.__order.number
         filename = f"Заказ-наряд №{order_number} {today.strftime('%d%m%Y%H%M%S')}.xlsx"
 
         if not os.path.exists(path):
@@ -53,7 +53,7 @@ class OrderExcelCreator:
     def __print_main_data(self, ws: Worksheet):
         order = self.__order
 
-        ws["F1"] = "____" if order else order.number
+        ws["F1"] = "____" if not order else order.number
 
         if order and order.date_begin:
             ws["A4"] = order.date_begin.strftime("%d.%m.%Y %H:%M")
