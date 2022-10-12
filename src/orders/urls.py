@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .api.views import OrderDetailView
+from .api.views import OrderExportExcelView
 from .api.views import OrderListView
 from .api.views import PostDetailView
 from .api.views import PostListView
@@ -18,6 +19,7 @@ urlpatterns = [
     path("api/orders/post/<int:pk>", PostDetailView.as_view(), name="post-detail"),
     path("api/orders/order/", OrderListView.as_view(), name="order-list"),
     path("api/orders/order/<int:pk>", OrderDetailView.as_view(), name="order-detail"),
+    path("api/orders/order/excel/", OrderExportExcelView.as_view(), name="order-excel"),
     path("api/orders/work_category/", WorkCategoryListView.as_view(), name="work-category-list"),
     path("api/orders/work_category/<int:pk>", WorkCategoryDetailView.as_view(), name="work-category-detail"),
     path("api/orders/work/", WorkListView.as_view(), name="work-list"),

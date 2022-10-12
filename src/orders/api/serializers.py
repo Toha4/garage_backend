@@ -98,13 +98,19 @@ class OrderListSerializer(ModelSerializer):
 
 
 class OrderWorkMechanickSerializer(ModelSerializer):
+    mechanic_short_fio = SerializerMethodField()
+
     class Meta:
         model = OrderWorkMechanic
         fields = (
             "pk",
             "mechanic",
+            "mechanic_short_fio",
             "time_minutes",
         )
+
+    def get_mechanic_short_fio(self, obj):
+        return obj.mechanic.short_fio
 
 
 class OrderWorkSerializer(WritableNestedModelSerializer):

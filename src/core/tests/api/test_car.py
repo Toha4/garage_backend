@@ -31,6 +31,12 @@ class CarApiTestCase(AuthorizationAPITestCase):
         serializer_data = CarShortSerializer(queryset, many=True).data
         self.assertEqual(serializer_data, response.data)
 
+        # date_request_filter
+        response_date_request_filter = self.client.get(url, {"date_request": "31.12.2021"})
+        self.assertEqual(status.HTTP_200_OK, response_date_request_filter.status_code)
+        serializer_data = CarShortSerializer(queryset, many=True).data
+        self.assertEqual(serializer_data, response_date_request_filter.data)
+
         # state_number_search
         response_state_number_search = self.client.get(
             url, {"show_decommissioned": "True", "state_number_search": "666"}

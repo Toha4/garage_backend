@@ -20,7 +20,7 @@ class EmployeeApiTestCase(AuthorizationAPITestCase):
             patronymic="Антонович",
             type=3,
             position="Начальник",
-            date_dismissal=None,
+            date_dismissal="2022-01-01",
         )
 
         url = reverse("employee-list")
@@ -30,6 +30,12 @@ class EmployeeApiTestCase(AuthorizationAPITestCase):
         queryset = Employee.objects.filter(pk__in=[employee1.pk, employee2.pk])
         serializer_data = EmployeeShortSerializer(queryset, many=True).data
         self.assertEqual(serializer_data, response.data)
+
+        # date_request_filter
+        response_date_request_filter = self.client.get(url, {"date_request": "01.01.2022"})
+        self.assertEqual(status.HTTP_200_OK, response_date_request_filter.status_code)
+        serializer_data = EmployeeShortSerializer(queryset, many=True).data
+        self.assertEqual(serializer_data, response_date_request_filter.data)
 
         # type_filter
         response_type_filter = self.client.get(url, {"show_dismissal": "True", "type": 3})

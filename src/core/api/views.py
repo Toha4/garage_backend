@@ -1,4 +1,7 @@
+from datetime import datetime
+
 from django.db.models import CharField
+from django.db.models import Q
 from django.db.models import Value as V
 from django.db.models.functions import Concat
 from django.shortcuts import get_object_or_404
@@ -28,11 +31,16 @@ class CarListView(GenericAPIView):
     serializer_class = CarShortSerializer
 
     def get_queryset(self):
+        queryset = Car.objects.all()
+
+        date_request = self.request.query_params.get("date_request")
         show_decommissioned = self.request.query_params.get("show_decommissioned")
-        if show_decommissioned and show_decommissioned == "True":
-            queryset = Car.objects.all()
-        else:
-            queryset = Car.objects.filter(date_decommissioned=None)
+        if date_request:
+            queryset = queryset.filter(
+                Q(date_decommissioned=None) | Q(date_decommissioned__gte=datetime.strptime(date_request, "%d.%m.%Y"))
+            )
+        elif show_decommissioned is None or show_decommissioned == "False":
+            queryset = queryset.filter(date_decommissioned=None)
 
         state_number_search = self.request.query_params.get("state_number_search")
         if state_number_search:
@@ -82,11 +90,16 @@ class EmployeeListView(GenericAPIView):
     serializer_class = EmployeeShortSerializer
 
     def get_queryset(self):
+        queryset = Employee.objects.all()
+
+        date_request = self.request.query_params.get("date_request")
         show_dismissal = self.request.query_params.get("show_dismissal")
-        if show_dismissal and show_dismissal == "True":
-            queryset = Employee.objects.all()
-        else:
-            queryset = Employee.objects.filter(date_dismissal=None)
+        if date_request:
+            queryset = queryset.filter(
+                Q(date_dismissal=None) | Q(date_dismissal__gte=datetime.strptime(date_request, "%d.%m.%Y"))
+            )
+        elif show_dismissal is None or show_dismissal == "False":
+            queryset = queryset.filter(date_dismissal=None)
 
         type_ = self.request.query_params.get("type")
         if type_:

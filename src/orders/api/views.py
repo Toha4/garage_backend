@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 
+from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.generics import ListAPIView
 from rest_framework.mixins import CreateModelMixin
@@ -17,6 +18,7 @@ from ..models import Post
 from ..models import Reason
 from ..models import Work
 from ..models import WorkCategory
+from ..reports.order_excel import OrderExcelCreator
 from .serializers import OrderDetailSerializer
 from .serializers import OrderListSerializer
 from .serializers import PostListSerializer
@@ -191,6 +193,23 @@ class OrderDetailView(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, G
 
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
+
+
+class OrderExportExcelView(GenericAPIView):
+    """Экспорт в Excel заказ-наряда"""
+    queryset = Order.objects.all()
+
+    def get(self, request, *args, **kwargs):     
+        try:
+            order = None
+            pk = self.request.query_params.get("pk")
+            if pk:    
+                order = self.get_queryset().get(pk=pk)
+
+            return Response({"file": request.build_absolute_uri(OrderExcelCreator(order)())}, status=status.HTTP_200_OK)
+            
+        except Exception:
+            return Response({"errors": {"file": ("Ошибка формирования файла!")}}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class WorkCategoryListView(CreateModelMixin, GenericAPIView):

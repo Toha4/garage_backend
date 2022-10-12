@@ -134,7 +134,12 @@ class OrderSerializerTestCase(TestCase):
                     "time_minutes": 120,
                     "note": "Тестовая работа",
                     "mechanics": [
-                        {"pk": order_work_mechanic.pk, "mechanic": order_work_mechanic.mechanic.pk, "time_minutes": 60}
+                        {
+                            "pk": order_work_mechanic.pk,
+                            "mechanic": order_work_mechanic.mechanic.pk,
+                            "mechanic_short_fio": order_work_mechanic.mechanic.short_fio,
+                            "time_minutes": 60,
+                        }
                     ],
                 }
             ],
