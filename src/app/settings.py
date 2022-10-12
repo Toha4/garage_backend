@@ -9,7 +9,7 @@ from django_auth_ldap.config import LDAPSearch
 
 # Set environment
 env = environ.Env(DEBUG=(bool, False))  # set default values and casting
-environ.Env.read_env() 
+environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -36,12 +36,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
-
     "authentication",
+    "core",
+    "orders",
 ]
 
 MIDDLEWARE = [
@@ -86,7 +86,18 @@ CORS_ORIGIN_WHITELIST = env("CORS_ORIGIN_WHITELIST", cast=str, default="http://l
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
-    "default": env.db()
+    "default": env.db(),
+    "mssql_sync": {
+        "NAME": "putewka",
+        "ENGINE": "sql_server.pyodbc",
+        "HOST": env("DATABASE_MSSQL_HOST", cast=str),
+        "USER": env("DATABASE_MSSQL_USER", cast=str),
+        "PASSWORD": env("DATABASE_MSSQL_PASSWORD", cast=str),
+        "OPTIONS": {
+            "driver": "ODBC Driver 17 for SQL Server",
+            "unicode_results": True,
+        },
+    },
 }
 
 
@@ -105,6 +116,7 @@ TIME_FORMAT = "%H:%M:%S"
 DATETIME_FORMAT = " ".join((DATE_FORMAT, TIME_FORMAT))
 
 SERIALIZER_DATE_PARAMS = dict(format="%d.%m.%Y", input_formats=["%d.%m.%Y", "iso-8601"])
+SERIALIZER_DATETIME_PARAMS = dict(format="%d.%m.%Y %H:%M", input_formats=["%d.%m.%Y %H:%M", "iso-8601"])
 
 
 # Static files (CSS, JavaScript, Images)
@@ -125,12 +137,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Rest framework
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
     "DEFAULT_PAGINATION_CLASS": "app.pagination.BasePagination",
     "PAGE_SIZE": 50,
     "DATE_FORMAT:": DATE_FORMAT,
@@ -151,9 +159,7 @@ AUTHENTICATION_BACKENDS = [
 AUTH_LDAP_SERVER_URI = env("AUTH_LDAP_SERVER_URI", cast=str, default="")
 AUTH_LDAP_BIND_DN = env("AUTH_LDAP_BIND_DN", cast=str, default="")
 AUTH_LDAP_BIND_PASSWORD = env("AUTH_LDAP_BIND_PASSWORD", cast=str, default="")
-AUTH_LDAP_USER_SEARCH = LDAPSearch(
-    "dc=mupts,dc=office", ldap.SCOPE_SUBTREE, "sAMAccountName=%(user)s"
-)
+AUTH_LDAP_USER_SEARCH = LDAPSearch("dc=mupts,dc=office", ldap.SCOPE_SUBTREE, "sAMAccountName=%(user)s")
 
 AUTH_LDAP_TIMEOUT = env("AUTH_LDAP_TIMEOUT", cast=float, default=10.0)
 AUTH_LDAP_CONNECTION_OPTIONS = {
@@ -170,9 +176,7 @@ AUTH_LDAP_USER_ATTR_MAP = {
     "initials": "initials",
 }
 
-AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
-    "dc=mupts,dc=office", ldap.SCOPE_SUBTREE, "(objectCategory=Group)"
-)
+AUTH_LDAP_GROUP_SEARCH = LDAPSearch("dc=mupts,dc=office", ldap.SCOPE_SUBTREE, "(objectCategory=Group)")
 AUTH_LDAP_GROUP_TYPE = ActiveDirectoryGroupType(name_attr="cn")
 
 # Active Directory groups for mirror import in the django
@@ -189,23 +193,18 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=14),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
-
     "ALGORITHM": "HS256",
     "SIGNING_KEY": env("SIMPLE_JWT_SIGNING_KEY", cast=str, default=SECRET_KEY),
     "VERIFYING_KEY": None,
     "AUDIENCE": None,
     "ISSUER": None,
-
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_HEADER_NAME": AUTH_HEADER_NAME,
     "USER_ID_FIELD": "pk",
     "USER_ID_CLAIM": "user_id",
-
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
     "TOKEN_TYPE_CLAIM": "token_type",
-
     "JTI_CLAIM": "jti",
-
     "REFRESH_COOKIE_NAME": "refresh_garage",
 }
 
