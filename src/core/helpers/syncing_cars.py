@@ -1,3 +1,5 @@
+import re
+
 from django.core.management.base import OutputWrapper
 from django.db import connection
 from django.db import connections
@@ -53,11 +55,14 @@ class SyncingCars:
             updated_car.date_decommissioned = car["DATA_SPIS"]
             action_name = "обновлен"
         else:
+            # Remove more than one space
+            name = re.sub(" +", " ", car["name"])
+
             updated_car = Car(
                 kod_mar_in_putewka=car["kod_mar"],
                 gos_nom_in_putewka=car["GOS_NOM"],
                 state_number=car["full_gos_nom"],
-                name=car["name"],
+                name=name,
                 kod_driver=car["KOD_WOD"],
                 date_decommissioned=car["DATA_SPIS"],
             )
