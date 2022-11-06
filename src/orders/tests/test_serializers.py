@@ -1,8 +1,20 @@
+import json
+
 from django.test import TestCase
 
 from app.helpers.database import convert_to_localtime
+from app.helpers.testing import DecimalEncoder
+from app.helpers.testing import get_test_user
 from core.tests.factory import CarFactory
 from core.tests.factory import EmployeeFactory
+from warehouse.constants import COMING
+from warehouse.constants import EXPENSE
+from warehouse.tests.factory import EntranceFactory
+from warehouse.tests.factory import MaterialCategoryFactory
+from warehouse.tests.factory import MaterialFactory
+from warehouse.tests.factory import TurnoverFactory
+from warehouse.tests.factory import UnitFactory
+from warehouse.tests.factory import WarehouseFactory
 
 from ..api.serializers import OrderDetailSerializer
 from ..api.serializers import OrderListSerializer
@@ -73,12 +85,14 @@ class PostListSerializerTestCase(TestCase):
 
 class OrderSerializerTestCase(TestCase):
     def test_list(self):
+        user = get_test_user()
+
         reason = ReasonFactory()
         post = PostFactory()
         car = CarFactory()
         driver = EmployeeFactory(type=1, position="Водитель")
         responsible = EmployeeFactory(number_in_kadry=2, type=3, position="Начальник")
-        order = OrderFactory(reason=reason, post=post, car=car, driver=driver, responsible=responsible)
+        order = OrderFactory(user=user, reason=reason, post=post, car=car, driver=driver, responsible=responsible)
 
         data = OrderListSerializer(order).data
         expected_data = {
@@ -95,19 +109,33 @@ class OrderSerializerTestCase(TestCase):
         self.assertEqual(expected_data, data)
 
     def test_detail(self):
+        user = get_test_user()
+
         reason = ReasonFactory()
         post = PostFactory()
         car = CarFactory()
         driver = EmployeeFactory(type=1, position="Водитель")
         responsible = EmployeeFactory(number_in_kadry=2, type=3, position="Начальник")
-        order = OrderFactory(reason=reason, post=post, car=car, driver=driver, responsible=responsible)
+        order = OrderFactory(user=user, reason=reason, post=post, car=car, driver=driver, responsible=responsible)
+
         work_category = WorkCategoryFactory()
         work = WorkFactory(category=work_category)
         order_work = OrderWorkFactory(order=order, work=work)
         mechanic = EmployeeFactory(number_in_kadry=3, type=2, position="Слесарь")
         order_work_mechanic = OrderWorkMechanicFactory(order_work=order_work, mechanic=mechanic)
 
+        unit = UnitFactory()
+        category = MaterialCategoryFactory()
+        material = MaterialFactory(unit=unit, category=category)
+        warehouse = WarehouseFactory()
+        entrance = EntranceFactory(user=user, responsible=responsible)
+        turnover_entrance = TurnoverFactory(
+            user=user, type=COMING, material=material, warehouse=warehouse, entrance=entrance
+        )
+        turnover_order = TurnoverFactory(user=user, type=EXPENSE, material=material, warehouse=warehouse, order=order)
+
         data = OrderDetailSerializer(order).data
+        data = json.loads(json.dumps(OrderDetailSerializer(order).data, cls=DecimalEncoder))
         expected_data = {
             "pk": order.pk,
             "created": convert_to_localtime(order.created).strftime("%d.%m.%Y %H:%M"),
@@ -142,6 +170,26 @@ class OrderSerializerTestCase(TestCase):
                         }
                     ],
                 }
+            ],
+            "turnovers_from_order": [
+                {
+                    "pk": turnover_order.pk,
+                    "type": turnover_order.type,
+                    "date": "01.01.2022",
+                    "is_correction": False,
+                    "note": "",
+                    "material": turnover_order.material.id,
+                    "material_name": "Масло моторное IDEMITSU 5w30",
+                    "material_unit_name": "кг",
+                    "material_unit_is_precision_point": True,
+                    "warehouse": turnover_order.warehouse.id,
+                    "warehouse_name": "Главный склад",
+                    "price": 10.0,
+                    "quantity": 2.0,
+                    "sum": 20.0,
+                    "order": order.pk,
+                    "entrance": None,
+                },
             ],
         }
         self.assertEqual(expected_data, data)

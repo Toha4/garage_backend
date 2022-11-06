@@ -206,8 +206,7 @@ class OrderExportExcelView(GenericAPIView):
             if pk:    
                 order = self.get_queryset().get(pk=pk)
 
-            return Response({"file": request.build_absolute_uri(OrderExcelCreator(order)())}, status=status.HTTP_200_OK)
-            
+            return Response({"file": request.build_absolute_uri(OrderExcelCreator(order)())}, status=status.HTTP_200_OK)            
         except Exception:
             return Response({"errors": {"file": ("Ошибка формирования файла!")}}, status=status.HTTP_400_BAD_REQUEST)
 

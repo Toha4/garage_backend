@@ -26,6 +26,7 @@ class PostFactory(DjangoModelFactory):
 
 
 class OrderFactory(DjangoModelFactory):
+    user = None
     number = None
     status = REQUEST
     reason = None

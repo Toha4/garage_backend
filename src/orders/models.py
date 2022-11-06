@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 from app.models import TimestampModel
@@ -39,6 +40,9 @@ class Post(models.Model):
 
 
 class Order(TimestampModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, verbose_name="Пользователь", on_delete=models.PROTECT, related_name="orders"
+    )
     number = models.IntegerField(verbose_name="Номер", unique=True)
     status = models.IntegerField(verbose_name="Статус", choices=ORDER_STATUS)
     reason = models.ForeignKey(

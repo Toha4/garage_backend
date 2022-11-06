@@ -8,16 +8,28 @@ from rest_framework import status
 from app.helpers.database import convert_to_localtime
 from app.helpers.database import get_period_filter_lookup
 from app.helpers.testing import AuthorizationAPITestCase
+from app.helpers.testing import get_test_user
 from core.tests.factory import CarFactory
 from core.tests.factory import EmployeeFactory
 from orders.helpers.order_general_search import order_general_search
+from warehouse.constants import COMING
+from warehouse.constants import EXPENSE
+from warehouse.tests.factory import EntranceFactory
+from warehouse.tests.factory import MaterialCategoryFactory
+from warehouse.tests.factory import MaterialFactory
+from warehouse.tests.factory import TurnoverFactory
+from warehouse.tests.factory import UnitFactory
+from warehouse.tests.factory import WarehouseFactory
 
 from ...api.serializers import OrderDetailSerializer
 from ...api.serializers import OrderListSerializer
+from ...api.serializers import OrderWorkSerializer
 from ...constants import COMPLETED
 from ...constants import REQUEST
 from ...models import Order
 from ..factory import OrderFactory
+from ..factory import OrderWorkFactory
+from ..factory import OrderWorkMechanicFactory
 from ..factory import PostFactory
 from ..factory import ReasonFactory
 from ..factory import WorkCategoryFactory
@@ -26,6 +38,8 @@ from ..factory import WorkFactory
 
 class OrderApiTestCase(AuthorizationAPITestCase):
     def test_get_list(self):
+        user = get_test_user()
+
         reason1 = ReasonFactory()
         reason2 = ReasonFactory(type=2, name="Ремонт электрооборудования")
         post = PostFactory()
@@ -34,6 +48,7 @@ class OrderApiTestCase(AuthorizationAPITestCase):
         driver = EmployeeFactory(type=1, position="Водитель")
         responsible = EmployeeFactory(number_in_kadry=2, type=3, position="Начальник")
         order1 = OrderFactory(
+            user=user,
             status=REQUEST,
             reason=reason1,
             post=post,
@@ -43,6 +58,7 @@ class OrderApiTestCase(AuthorizationAPITestCase):
             date_begin="2022-01-01 12:00",
         )
         order2 = OrderFactory(
+            user=user,
             status=COMPLETED,
             reason=reason1,
             post=post,
@@ -52,6 +68,7 @@ class OrderApiTestCase(AuthorizationAPITestCase):
             date_begin="2022-01-15 08:00",
         )
         order3 = OrderFactory(
+            user=user,
             status=COMPLETED,
             reason=reason2,
             post=post,
@@ -90,7 +107,17 @@ class OrderApiTestCase(AuthorizationAPITestCase):
         self.assertEqual(serializer_data, response_reasons_filter.data)
 
         # status_filter
-        response_status_filter = self.client.get(url, {"statuses": ",".join(str(i) for i in[COMPLETED,])})
+        response_status_filter = self.client.get(
+            url,
+            {
+                "statuses": ",".join(
+                    str(i)
+                    for i in [
+                        COMPLETED,
+                    ]
+                )
+            },
+        )
         self.assertEqual(status.HTTP_200_OK, response_status_filter.status_code)
         queryset = Order.objects.filter(status__in=[COMPLETED])
         serializer_data = {
@@ -212,6 +239,7 @@ class OrderApiTestCase(AuthorizationAPITestCase):
             "odometer": 123000,
             "note": "Тестовый заказ-наряд 1",
             "order_works": [],
+            "turnovers_from_order": [],
         }
 
         response = self.client.post(url, data=json.dumps(payload), content_type="application/json")
@@ -305,13 +333,59 @@ class OrderApiTestCase(AuthorizationAPITestCase):
         with self.assertRaises(Order.DoesNotExist):
             Order.objects.get(note=payload_with_works_mechanics_duplicate["note"])
 
+        # Order with materials
+        user = get_test_user()
+        unit = UnitFactory()
+        category = MaterialCategoryFactory()
+        material = MaterialFactory(unit=unit, category=category)
+        warehouse = WarehouseFactory()
+        entrance = EntranceFactory(user=user, responsible=responsible)
+        turnover_entrance = TurnoverFactory(
+            user=user, type=COMING, material=material, warehouse=warehouse, entrance=entrance
+        )
+
+        payload_with_materials = copy.copy(payload)
+        payload_with_materials["turnovers_from_order"] = [
+            {
+                "pk": None,
+                "date": "01.01.2022",
+                "material": material.id,
+                "warehouse": warehouse.id,
+                "price": 10.0,
+                "quantity": 2.0,
+                "sum": 20.0,
+            },
+        ]
+        payload_with_materials["note"] = "Тестовый заказ-наряд 6"
+        response = self.client.post(url, data=json.dumps(payload_with_materials), content_type="application/json")
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertTrue(Order.objects.get(note=payload_with_materials["note"]))
+
     def test_get(self):
+        user = get_test_user()
+
         reason = ReasonFactory()
         post = PostFactory()
         car = CarFactory()
         driver = EmployeeFactory(type=1, position="Водитель")
         responsible = EmployeeFactory(number_in_kadry=2, type=3, position="Начальник")
-        order = OrderFactory(reason=reason, post=post, car=car, driver=driver, responsible=responsible)
+        order = OrderFactory(user=user, reason=reason, post=post, car=car, driver=driver, responsible=responsible)
+
+        work_category = WorkCategoryFactory()
+        work = WorkFactory(category=work_category)
+        order_work = OrderWorkFactory(order=order, work=work)
+        mechanic = EmployeeFactory(number_in_kadry=3, type=2, position="Слесарь")
+        order_work_mechanic = OrderWorkMechanicFactory(order_work=order_work, mechanic=mechanic)
+
+        unit = UnitFactory()
+        category = MaterialCategoryFactory()
+        material = MaterialFactory(unit=unit, category=category)
+        warehouse = WarehouseFactory()
+        entrance = EntranceFactory(user=user, responsible=responsible)
+        turnover_entrance = TurnoverFactory(
+            user=user, type=COMING, material=material, warehouse=warehouse, entrance=entrance
+        )
+        turnover_order = TurnoverFactory(user=user, type=EXPENSE, material=material, warehouse=warehouse, order=order)
 
         url = reverse("order-detail", kwargs={"pk": order.pk})
         response = self.client.get(url)
@@ -321,6 +395,8 @@ class OrderApiTestCase(AuthorizationAPITestCase):
         self.assertEqual(serializer_data, response.data)
 
     def test_update(self):
+        user = get_test_user()
+
         reason1 = ReasonFactory()
         reason2 = ReasonFactory(name="TO2")
         post1 = PostFactory()
@@ -338,7 +414,22 @@ class OrderApiTestCase(AuthorizationAPITestCase):
         driver2 = EmployeeFactory(number_in_kadry=2, type=1, position="Водитель 2")
         responsible1 = EmployeeFactory(number_in_kadry=3, type=3, position="Начальник")
         responsible2 = EmployeeFactory(number_in_kadry=4, type=3, position="Начальник 2")
-        order = OrderFactory(reason=reason1, post=post1, car=car1, driver=driver1, responsible=responsible1)
+        order = OrderFactory(user=user, reason=reason1, post=post1, car=car1, driver=driver1, responsible=responsible1)
+
+        # Aded data
+        work_category = WorkCategoryFactory()
+        work = WorkFactory(category=work_category)
+        mechanic = EmployeeFactory(number_in_kadry=5, type=2, position="Слесарь")
+
+        user = get_test_user()
+        unit = UnitFactory()
+        category = MaterialCategoryFactory()
+        material = MaterialFactory(unit=unit, category=category)
+        warehouse = WarehouseFactory()
+        entrance = EntranceFactory(user=user, responsible=responsible1)
+        turnover_entrance = TurnoverFactory(
+            user=user, type=COMING, material=material, warehouse=warehouse, entrance=entrance
+        )
 
         payload = {
             "number": 2,
@@ -352,10 +443,31 @@ class OrderApiTestCase(AuthorizationAPITestCase):
             "responsible": responsible2.pk,
             "odometer": 321000,
             "note": "Тестовый заказ-наряд 321",
+            "order_works": [
+                {
+                    "pk": None,
+                    "work": work.pk,
+                    "quantity": 1,
+                    "time_minutes": 120,
+                    "note": "Тестовая работа",
+                    "mechanics": [{"pk": None, "mechanic": mechanic.pk, "time_minutes": 60}],
+                }
+            ],
+            "turnovers_from_order": [
+                {
+                    "pk": None,
+                    "date": "01.01.2022",
+                    "material": material.id,
+                    "warehouse": warehouse.id,
+                    "price": 10.0,
+                    "quantity": 2.0,
+                    "sum": 20.0,
+                },
+            ],
         }
 
         url = reverse("order-detail", kwargs={"pk": order.pk})
-        response = self.client.put(url, data=payload)
+        response = self.client.put(url, data=json.dumps(payload), content_type="application/json")
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         reason_result = Order.objects.get(pk=order.pk)
@@ -373,13 +485,18 @@ class OrderApiTestCase(AuthorizationAPITestCase):
         self.assertEqual(reason_result.odometer, payload["odometer"])
         self.assertEqual(reason_result.note, payload["note"])
 
+        self.assertEqual(reason_result.order_works.all().count(), 1)
+        self.assertEqual(reason_result.turnovers_from_order.all().count(), 1)
+
     def test_delete(self):
+        user = get_test_user()
+
         reason = ReasonFactory()
         post = PostFactory()
         car = CarFactory()
         driver = EmployeeFactory(type=1, position="Водитель")
         responsible = EmployeeFactory(number_in_kadry=2, type=3, position="Начальник")
-        order = OrderFactory(reason=reason, post=post, car=car, driver=driver, responsible=responsible)
+        order = OrderFactory(user=user, reason=reason, post=post, car=car, driver=driver, responsible=responsible)
 
         url = reverse("order-detail", kwargs={"pk": order.pk})
         response = self.client.delete(url)

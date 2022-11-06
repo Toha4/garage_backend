@@ -2,6 +2,7 @@ from django.db.models import CASCADE
 from django.db.models import PROTECT
 from django.test import TestCase
 
+from app.helpers.testing import get_test_user
 from core.tests.factory import CarFactory
 from core.tests.factory import EmployeeFactory
 
@@ -46,12 +47,14 @@ class PostModelTestCase(TestCase):
 
 class OrderModelTestCase(TestCase):
     def setUp(self):
+        user = get_test_user()
+
         reason = ReasonFactory()
         post = PostFactory()
         car = CarFactory()
         driver = EmployeeFactory(type=1, position="Водитель")
         responsible = EmployeeFactory(number_in_kadry=2, type=3, position="Начальник")
-        self.order = OrderFactory(reason=reason, post=post, car=car, driver=driver, responsible=responsible)
+        self.order = OrderFactory(user=user, reason=reason, post=post, car=car, driver=driver, responsible=responsible)
 
     def test_fields(self):
         order = Order.objects.first()
@@ -146,9 +149,11 @@ class WorkModelTestCase(TestCase):
 
 class OrderWorkModelTestCase(TestCase):
     def setUp(self):
+        user = get_test_user()
+
         reason = ReasonFactory()
         car = CarFactory()
-        order = OrderFactory(reason=reason, car=car)
+        order = OrderFactory(user=user, reason=reason, car=car)
         work_category = WorkCategoryFactory()
         work = WorkFactory(category=work_category)
         self.order_work = OrderWorkFactory(order=order, work=work)
@@ -169,9 +174,11 @@ class OrderWorkModelTestCase(TestCase):
 
 class OrderWorkMechanicModelTestCase(TestCase):
     def setUp(self):
+        user = get_test_user()
+
         reason = ReasonFactory()
         car = CarFactory()
-        order = OrderFactory(reason=reason, car=car)
+        order = OrderFactory(user=user, reason=reason, car=car)
         work_category = WorkCategoryFactory()
         work = WorkFactory(category=work_category)
         order_work = OrderWorkFactory(order=order, work=work)

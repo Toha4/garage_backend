@@ -180,43 +180,57 @@ class OrderExcelCreator:
         return mechanics_str
 
     def __print_materials(self, ws: Worksheet, row_start: int) -> int:
-        # TODO: Update method after added Materials application
         row_number = row_start
+        order_materials = []
+        is_complited = self.__order and self.__order.status == COMPLETED
 
-        if self.__order and self.__order.status == COMPLETED:
-            return row_number
+        if self.__order:
+            order_materials = self.__order.turnovers_from_order.all()
+
+            if is_complited and not order_materials:
+                return row_number
 
         # Title table
         ws.merge_cells(f"A{row_number}:G{row_number}")
         set_cell(ws[f"A{row_number}"], "Израсходованные материалы", alignment=ALIGNMENT_CENTER, font=Font(bold=True))
 
-        ws.merge_cells(f"H{row_number}:I{row_number}")
-        set_cell(ws[f"H{row_number}"], "Кол-во", alignment=ALIGNMENT_CENTER, font=Font(bold=True))
+        ws.merge_cells(f"H{row_number}:J{row_number}")
+        set_cell(ws[f"H{row_number}"], "Склад", alignment=ALIGNMENT_CENTER, font=Font(bold=True))
 
-        ws.merge_cells(f"J{row_number}:K{row_number}")
-        set_cell(ws[f"J{row_number}"], "Склад", alignment=ALIGNMENT_CENTER, font=Font(bold=True))
+        set_cell(ws[f"K{row_number}"], "Кол-во", alignment=ALIGNMENT_CENTER, font=Font(bold=True))
+
         row_number += 1
 
-        for _ in range(10):
-            self.__print_material_row(ws, row_number, is_empty=True)
+        for material in order_materials:
+            self.__print_material_row(
+                ws,
+                row_number,
+                material.material.name,
+                material.warehouse.name,
+                str(abs(material.quantity)),
+            )
             row_number += 1
+
+        if not is_complited and len(order_materials) < 10:
+            for _ in range(10 - len(order_materials)):
+                self.__print_material_row(ws, row_number, is_empty=True)
+                row_number += 1
 
         set_border(ws, f"A{row_start}:K{row_number - 1}")
 
         return row_number
 
-    def __print_material_row(self, ws: Worksheet, row="", name="", quantity="", store_house="", is_empty=False):
+    def __print_material_row(self, ws: Worksheet, row="", name="", store_house="", quantity="", is_empty=False):
         if is_empty:
             ws.row_dimensions[row].height = 18
 
         ws.merge_cells(f"A{row}:G{row}")
         set_cell(ws[f"A{row}"], name, alignment=ALIGNMENT_LEFT, wrap_text=True)
 
-        ws.merge_cells(f"H{row}:I{row}")
-        set_cell(ws[f"H{row}"], quantity, alignment=ALIGNMENT_LEFT)
+        ws.merge_cells(f"H{row}:J{row}")
+        set_cell(ws[f"H{row}"], store_house, alignment=ALIGNMENT_LEFT)
 
-        ws.merge_cells(f"J{row}:K{row}")
-        set_cell(ws[f"J{row}"], store_house, alignment=ALIGNMENT_LEFT)
+        set_cell(ws[f"K{row}"], quantity, alignment=ALIGNMENT_LEFT)
 
         # For auto width (auto width not working with merge cells)
         set_cell(ws[f"P{row}"], name, alignment=ALIGNMENT_LEFT, wrap_text=True)

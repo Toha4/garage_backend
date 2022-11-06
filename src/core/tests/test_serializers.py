@@ -2,6 +2,7 @@ from django.test import TestCase
 
 from ..api.serializers import CarDetailSerializer
 from ..api.serializers import CarShortSerializer
+from ..api.serializers import CarTagSerializer
 from ..api.serializers import EmployeeDetailSerializer
 from ..api.serializers import EmployeeShortSerializer
 from .factory import CarFactory
@@ -28,6 +29,15 @@ class CarSerializerTestCase(TestCase):
             "driver_pk": None,
             "date_decommissioned": None,
         }
+        self.assertEqual(expected_data, data)
+
+
+class CarTagSerializerTestCase(TestCase):
+    def test_ok(self):
+        car1 = CarFactory()
+        car2 = CarFactory(kod_mar_in_putewka=2, gos_nom_in_putewka="666", state_number="А 666 АА", name="КАМАЗ 5000")
+        data = CarTagSerializer([car1, car2], many=True).data
+        expected_data = [{"name": "УАЗ 111"}, {"name": "КАМАЗ 5000"}]
         self.assertEqual(expected_data, data)
 
 
