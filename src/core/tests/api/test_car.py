@@ -6,6 +6,7 @@ from app.helpers.testing import AuthorizationAPITestCase
 
 from ...api.serializers import CarDetailSerializer
 from ...api.serializers import CarShortSerializer
+from ...api.serializers import CarTagSerializer
 from ...models import Car
 from ..factory import CarFactory
 
@@ -50,6 +51,26 @@ class CarApiTestCase(AuthorizationAPITestCase):
         self.assertEqual(status.HTTP_200_OK, response_name_search.status_code)
         serializer_data = CarShortSerializer([car1], many=True).data
         self.assertEqual(serializer_data, response_name_search.data)
+
+    def test_get_tags_list(self):
+        car1 = CarFactory()
+        car2 = CarFactory(
+            kod_mar_in_putewka=2,
+            gos_nom_in_putewka="666",
+            state_number="Б 666 ББ",
+            name="КАМАЗ 321",
+            kod_driver=12,
+            date_decommissioned="2022-01-01",
+        )
+
+        url = reverse("car-tag-list")
+
+        response = self.client.get(url)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+
+        queryset = Car.objects.filter(pk__in=[car1.pk, car2.pk])
+        serializer_data = CarTagSerializer(queryset, many=True).data
+        self.assertEqual(serializer_data, response.data)
 
     def test_create_forbidden(self):
         payload = {

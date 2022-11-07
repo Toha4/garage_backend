@@ -15,6 +15,7 @@ from ..models import Car
 from ..models import Employee
 from .serializers import CarDetailSerializer
 from .serializers import CarShortSerializer
+from .serializers import CarTagSerializer
 from .serializers import EmployeeDetailSerializer
 from .serializers import EmployeeShortSerializer
 
@@ -76,6 +77,16 @@ class CarDetailView(RetrieveModelMixin, UpdateModelMixin, GenericAPIView):
 
     def patch(self, request, *args, **kwargs):
         return self.partial_update(request, *args, **kwargs)
+
+
+class CarTagsListView(GenericAPIView):
+    serializer_class = CarTagSerializer
+    queryset = Car.objects.all().distinct("name")
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class EmployeeListView(GenericAPIView):

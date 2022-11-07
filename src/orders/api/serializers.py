@@ -2,8 +2,13 @@ from django.conf import settings
 
 from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework.serializers import DateTimeField
+from rest_framework.serializers import HiddenField
 from rest_framework.serializers import ModelSerializer
 from rest_framework.serializers import SerializerMethodField
+
+from app.helpers.serializers import CurrentUserDefault
+from warehouse.api.serializers import TurnoverOrderNestedWriteSerializer
+from warehouse.constants import EXPENSE
 
 from ..constants import ORDER_STATUS
 from ..helpers.validators_order import validator_mechanics_order_work
@@ -139,17 +144,20 @@ class OrderWorkSerializer(WritableNestedModelSerializer):
 
 
 class OrderDetailSerializer(WritableNestedModelSerializer):
+    user = HiddenField(default=CurrentUserDefault())
     created = DateTimeField(**settings.SERIALIZER_DATETIME_PARAMS, read_only=True)
     updated = DateTimeField(**settings.SERIALIZER_DATETIME_PARAMS, read_only=True)
     date_begin = DateTimeField(**settings.SERIALIZER_DATETIME_PARAMS)
     date_end = DateTimeField(**settings.SERIALIZER_DATETIME_PARAMS, required=False, allow_null=True)
     order_works = OrderWorkSerializer(many=True)
     car_name = SerializerMethodField()
+    turnovers_from_order = TurnoverOrderNestedWriteSerializer(many=True)
 
     class Meta:
         model = Order
         fields = (
             "pk",
+            "user",
             "created",
             "updated",
             "number",
@@ -165,6 +173,7 @@ class OrderDetailSerializer(WritableNestedModelSerializer):
             "odometer",
             "note",
             "order_works",
+            "turnovers_from_order",
         )
         read_only_fields = ("number",)
 
@@ -182,6 +191,31 @@ class OrderDetailSerializer(WritableNestedModelSerializer):
                     validator_mechanics_order_work(mechanics, order_work.get("work").pk)
 
         return data
+
+    def run_validation(self, data):
+        if "turnovers_from_order" in data:
+            for turnover_material in data.get("turnovers_from_order"):
+                turnover_material["type"] = EXPENSE
+
+        validated_data = super().run_validation(data=data)
+        return validated_data
+
+    def update(self, instance, validated_data):
+        """
+        Списанные материлы можно только добавить, редактировать их нельзя,
+        удалить можно только удалив оборот (turnover), если заказ-наряд не выполнен
+        """
+        turnovers_from_order = validated_data.pop("turnovers_from_order")
+
+        instance = super().update(instance, validated_data)
+
+        # Сохраняем только вновь добавленные материалы
+        for turnover_material in turnovers_from_order:
+            if "pk" not in turnover_material or turnover_material["pk"] is None:
+                turnover_material["user"] = instance.user
+                instance.turnovers_from_order.create(**turnover_material)
+
+        return instance
 
 
 class WorkCategorySerializer(ModelSerializer):

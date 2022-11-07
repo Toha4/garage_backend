@@ -51,6 +51,12 @@ class CarDetailSerializer(ModelSerializer):
         return None
 
 
+class CarTagSerializer(ModelSerializer):
+    class Meta:
+        model = Car
+        fields = ("name",)
+
+
 class EmployeeShortSerializer(ModelSerializer):
     class Meta:
         model = Employee
