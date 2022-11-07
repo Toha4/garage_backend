@@ -189,7 +189,7 @@ class EntranceApiTestCase(AuthorizationAPITestCase):
         self.assertEqual(changed_entrance.provider, payload["provider"])
         self.assertEqual(changed_entrance.note, payload["note"])
 
-        turnovers_from_entrance = changed_entrance.turnovers_from_entrance.all().order_by("id")
+        turnovers_from_entrance = changed_entrance.turnovers_from_entrance.all().order_by("pk")
         self.assertNotEqual(
             turnovers_from_entrance[0].date.strftime("%d.%m.%Y"), payload["turnovers_from_entrance"][0]["date"]
         )

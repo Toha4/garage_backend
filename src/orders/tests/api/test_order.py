@@ -349,8 +349,8 @@ class OrderApiTestCase(AuthorizationAPITestCase):
             {
                 "pk": None,
                 "date": "01.01.2022",
-                "material": material.id,
-                "warehouse": warehouse.id,
+                "material": material.pk,
+                "warehouse": warehouse.pk,
                 "price": 10.0,
                 "quantity": 2.0,
                 "sum": 20.0,
@@ -457,8 +457,8 @@ class OrderApiTestCase(AuthorizationAPITestCase):
                 {
                     "pk": None,
                     "date": "01.01.2022",
-                    "material": material.id,
-                    "warehouse": warehouse.id,
+                    "material": material.pk,
+                    "warehouse": warehouse.pk,
                     "price": 10.0,
                     "quantity": 2.0,
                     "sum": 20.0,

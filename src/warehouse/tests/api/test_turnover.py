@@ -50,7 +50,7 @@ class TurnoverApiTestCase(AuthorizationAPITestCase):
         )
 
         url = reverse("turnover-list")
-        response = self.client.get(url, {"entrance_id": entrance.id})
+        response = self.client.get(url, {"entrance_pk": entrance.pk})
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         queryset = Turnover.objects.filter(pk__in=[turnover1.pk, turnover2.pk])
@@ -70,7 +70,7 @@ class TurnoverApiTestCase(AuthorizationAPITestCase):
             "date": "18.10.2022",
             "is_correction": True,
             "note": "Тест корректировки",
-            "user": user.id,
+            "user": user.pk,
             "material": material.pk,
             "warehouse": warehouse.pk,
             "price": 10.00,
@@ -81,7 +81,7 @@ class TurnoverApiTestCase(AuthorizationAPITestCase):
         url = reverse("turnover-list")
         response = self.client.post(url, data=payload)
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-        self.assertTrue(Turnover.objects.get(material_id=material.id))
+        self.assertTrue(Turnover.objects.get(material_id=material.pk))
 
     def test_get(self):
         user = get_test_user()
@@ -122,7 +122,7 @@ class TurnoverApiTestCase(AuthorizationAPITestCase):
             "date": "12.10.2022",
             "is_correction": True,
             "note": "Тест изменения корректировки",
-            "user": user.id,
+            "user": user.pk,
             "material": material.pk,
             "warehouse": warehouse.pk,
             "price": 5.00,
@@ -257,7 +257,7 @@ class TurnoverApiTestCase(AuthorizationAPITestCase):
         turnover3 = TurnoverFactory(user=user, type=EXPENSE, material=material, warehouse=warehouse, order=order)
 
         url = reverse("turnover-material-list")
-        response = self.client.get(url, {"material_id": material.id})
+        response = self.client.get(url, {"material_pk": material.pk})
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         queryset = Turnover.objects.filter(pk__in=[turnover1.pk, turnover2.pk, turnover3.pk]).order_by("-date", "-pk")
@@ -272,8 +272,8 @@ class TurnoverApiTestCase(AuthorizationAPITestCase):
         self.assertEqual(serializer_data, response.data)
 
         # warehouse_filter
-        warehouse_filter = warehouse.id
-        response_warehouse_filter = self.client.get(url, {"material_id": material.id, "warehouse": warehouse_filter})
+        warehouse_filter = warehouse.pk
+        response_warehouse_filter = self.client.get(url, {"material_pk": material.pk, "warehouse": warehouse_filter})
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         queryset = Turnover.objects.filter(pk__in=[turnover1.pk, turnover3.pk]).order_by("-date", "-pk")
@@ -289,7 +289,7 @@ class TurnoverApiTestCase(AuthorizationAPITestCase):
 
         # turnover_type_filter
         turnover_type = COMING
-        response_warehouse_filter = self.client.get(url, {"material_id": material.id, "turnover_type": turnover_type})
+        response_warehouse_filter = self.client.get(url, {"material_pk": material.pk, "turnover_type": turnover_type})
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         queryset = Turnover.objects.filter(pk__in=[turnover1.pk, turnover2.pk]).order_by("-date", "-pk")
@@ -318,10 +318,10 @@ class TurnoverApiTestCase(AuthorizationAPITestCase):
         turnover = TurnoverFactory(user=user, type=COMING, material=material, warehouse=warehouse, entrance=entrance)
 
         payload = {
-            "material": material.id,
+            "material": material.pk,
             "date": "01.01.2022",
-            "warehouse_outgoing": warehouse.id,
-            "warehouse_incoming": warehouse2.id,
+            "warehouse_outgoing": warehouse.pk,
+            "warehouse_incoming": warehouse2.pk,
             "price": 10.00,
             "quantity": 1.0,
             "sum": 10.00,
@@ -347,10 +347,10 @@ class TurnoverApiTestCase(AuthorizationAPITestCase):
         turnover = TurnoverFactory(user=user, type=COMING, material=material, warehouse=warehouse, entrance=entrance)
 
         payload = {
-            "material": material.id,
+            "material": material.pk,
             "date": "01.01.2022",
-            "warehouse_outgoing": warehouse.id,
-            "warehouse_incoming": warehouse2.id,
+            "warehouse_outgoing": warehouse.pk,
+            "warehouse_incoming": warehouse2.pk,
             "price": 10.00,
             "quantity": 3.0,
             "sum": 30.00,

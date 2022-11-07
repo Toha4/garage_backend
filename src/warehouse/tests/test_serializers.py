@@ -143,11 +143,11 @@ class MaterialAvailabilitySerializerTestCase(TestCase):
 
         data = json.loads(json.dumps(MaterialAvailabilitySerializer(material).data, cls=DecimalEncoder))
         expected_data = {
-            "id": material.id,
+            "pk": material.pk,
             "name": "Масло моторное IDEMITSU 5w30",
             "warehouses_availability": [
                 {
-                    "warehouse": turnover.warehouse.id,
+                    "warehouse": turnover.warehouse.pk,
                     "warehouse_name": "Главный склад",
                     "quantity": 2.0,
                     "prices": {"average_price": 10.0, "last_price": 10.0},
@@ -174,22 +174,22 @@ class TurnoverSerializerTestCase(TestCase):
 
         data = json.loads(json.dumps(TurnoverSerializer(turnover).data, cls=DecimalEncoder))
         expected_data = {
-            "pk": turnover.id,
+            "pk": turnover.pk,
             "type": 1,
             "date": "2022-01-01",
             "is_correction": False,
             "note": "",
-            "material": turnover.material.id,
+            "material": turnover.material.pk,
             "material_name": "Масло моторное IDEMITSU 5w30",
             "material_unit_name": "кг",
             "material_unit_is_precision_point": True,
-            "warehouse": turnover.warehouse.id,
+            "warehouse": turnover.warehouse.pk,
             "warehouse_name": "Главный склад",
             "price": 10.0,
             "quantity": 2.0,
             "sum": 20.0,
             "order": None,
-            "entrance": entrance.id,
+            "entrance": entrance.pk,
         }
         self.assertEqual(expected_data, data)
 
@@ -211,7 +211,7 @@ class TurnoverMaterialReadSerializerTestCase(TestCase):
 
         data = json.loads(json.dumps(TurnoverMaterialReadSerializer(turnover).data, cls=DecimalEncoder))
         expected_data = {
-            "id": turnover.id,
+            "pk": turnover.pk,
             "type": 1,
             "date": "2022-01-01",
             "is_correction": False,
@@ -223,7 +223,7 @@ class TurnoverMaterialReadSerializerTestCase(TestCase):
             "price": 10.0,
             "sum": 20.0,
             "order": None,
-            "entrance": entrance.id,
+            "entrance": entrance.pk,
         }
         self.assertEqual(expected_data, data)
 
@@ -240,7 +240,7 @@ class EntranceListSerializerTestCase(TestCase):
 
         data = EntranceListSerializer(entrance).data
         expected_data = {
-            "pk": entrance.id,
+            "pk": entrance.pk,
             "date": "2022-01-01",
             "document_number": "A-111",
             "provider": "ОАО КАМАЗ",
@@ -262,30 +262,30 @@ class EntranceSerializerTestCase(TestCase):
 
         data = json.loads(json.dumps(EntranceSerializer(entrance).data, cls=DecimalEncoder))
         expected_data = {
-            "pk": entrance.id,
+            "pk": entrance.pk,
             "date": "2022-01-01",
             "document_number": "A-111",
-            "responsible": entrance.responsible.id,
+            "responsible": entrance.responsible.pk,
             "provider": "ОАО КАМАЗ",
             "note": "Тестовое поступление",
             "turnovers_from_entrance": [
                 {
-                    "pk": turnover.id,
+                    "pk": turnover.pk,
                     "type": 1,
                     "date": "01.01.2022",
                     "is_correction": False,
                     "note": "",
-                    "material": turnover.material.id,
+                    "material": turnover.material.pk,
                     "material_name": "Масло моторное IDEMITSU 5w30",
                     "material_unit_name": "кг",
                     "material_unit_is_precision_point": True,
-                    "warehouse": turnover.warehouse.id,
+                    "warehouse": turnover.warehouse.pk,
                     "warehouse_name": "Главный склад",
                     "price": 10.0,
                     "quantity": 2.0,
                     "sum": 20.0,
                     "order": None,
-                    "entrance": turnover.entrance.id,
+                    "entrance": turnover.entrance.pk,
                 }
             ],
         }
@@ -309,16 +309,16 @@ class MaterialRemainsSerializerTestCase(TestCase):
 
         expected_data = [
             {
-                "id": material.id,
+                "pk": material.pk,
                 "name": "Масло моторное IDEMITSU 5w30",
-                "category": material.category.id,
+                "category": material.category.pk,
                 "category_name": "Масла",
                 "unit_name": "кг",
                 "unit_is_precision_point": True,
                 "compatbility": ["УАЗ 111"],
                 "warehouses_availability": [
                     {
-                        "warehouse": turnover.warehouse.id,
+                        "warehouse": turnover.warehouse.pk,
                         "warehouse_name": "Главный склад",
                         "quantity": 2.0,
                         "prices": {"average_price": 10.0, "last_price": 10.0},
@@ -348,12 +348,12 @@ class MaterialRemainsCategorySerializerTestCase(TestCase):
         data = json.loads(json.dumps(MaterialRemainsCategorySerializer(queryset, many=True).data, cls=DecimalEncoder))
         expected_data = [
             {
-                "id": material.id,
+                "pk": material.pk,
                 "name": "Масло моторное IDEMITSU 5w30",
-                "category": material.category.id,
+                "category": material.category.pk,
                 "unit_name": "кг",
                 "unit_is_precision_point": True,
-                "warehouse": warehouse.id,
+                "warehouse": warehouse.pk,
                 "warehouse_name": "Главный склад",
                 "compatbility": ["УАЗ 111"],
                 "quantity": 2.0,

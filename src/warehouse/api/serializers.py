@@ -128,7 +128,7 @@ class MaterialAvailabilitySerializer(ModelSerializer):
     class Meta:
         model = Material
         fields = (
-            "id",
+            "pk",
             "name",
             "warehouses_availability",
             "prices",
@@ -138,13 +138,13 @@ class MaterialAvailabilitySerializer(ModelSerializer):
         )
 
     def get_warehouses_availability(self, obj):
-        return get_material_in_warehouses(obj.id)
+        return get_material_in_warehouses(obj.pk)
 
     def get_prices(self, obj):
-        return get_material_prices(obj.id)
+        return get_material_prices(obj.pk)
 
     def get_quantity(self, obj):
-        return get_material_remains(obj.id)
+        return get_material_remains(obj.pk)
 
     def get_unit_name(self, obj):
         if obj.unit:
@@ -236,7 +236,7 @@ class TurnoverMaterialReadSerializer(ModelSerializer):
     class Meta:
         model = Turnover
         fields = (
-            "id",
+            "pk",
             "type",
             "date",
             "is_correction",
@@ -353,7 +353,7 @@ class EntranceSerializer(ModelSerializer):
 
 
 class MaterialRemainsSerializer(ModelSerializer):
-    id = SerializerMethodField()
+    pk = SerializerMethodField()
     name = SerializerMethodField()
     category = SerializerMethodField()
     category_name = SerializerMethodField()
@@ -368,7 +368,7 @@ class MaterialRemainsSerializer(ModelSerializer):
     class Meta:
         model = Material
         fields = (
-            "id",
+            "pk",
             "name",
             "category",
             "category_name",
@@ -381,8 +381,8 @@ class MaterialRemainsSerializer(ModelSerializer):
             "sum",
         )
 
-    def get_id(self, obj):
-        return obj["id"]
+    def get_pk(self, obj):
+        return obj["pk"]
 
     def get_name(self, obj):
         return obj["name"]
@@ -404,7 +404,7 @@ class MaterialRemainsSerializer(ModelSerializer):
 
     def get_warehouses_availability(self, obj):
         if obj["quantity"] and obj["quantity"] > 0.00:
-            return get_material_in_warehouses(obj["id"], True)
+            return get_material_in_warehouses(obj["pk"], True)
         return []
 
     def get_quantity(self, obj):
@@ -424,7 +424,7 @@ class MaterialRemainsSerializer(ModelSerializer):
 
 
 class MaterialRemainsCategorySerializer(ModelSerializer):
-    id = SerializerMethodField()
+    pk = SerializerMethodField()
     name = SerializerMethodField()
     category = SerializerMethodField()
     unit_name = SerializerMethodField()
@@ -439,7 +439,7 @@ class MaterialRemainsCategorySerializer(ModelSerializer):
     class Meta:
         model = Material
         fields = (
-            "id",
+            "pk",
             "name",
             "category",
             "unit_name",
@@ -452,8 +452,8 @@ class MaterialRemainsCategorySerializer(ModelSerializer):
             "sum",
         )
 
-    def get_id(self, obj):
-        return obj["id"]
+    def get_pk(self, obj):
+        return obj["pk"]
 
     def get_name(self, obj):
         return obj["name"]
