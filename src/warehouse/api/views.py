@@ -303,7 +303,7 @@ class ProviderListView(APIView):
 class TurnoverListView(GenericAPIView, CreateModelMixin):
     """
     Обороты
-    Filters: order_id(int) or entrance_id(int)
+    Filters: order_pk(int) or entrance_pk(int)
     """
 
     serializer_class = TurnoverSerializer
@@ -311,13 +311,13 @@ class TurnoverListView(GenericAPIView, CreateModelMixin):
     def get_queryset(self):
         queryset = Turnover.objects.none()
 
-        order_id = self.request.query_params.get("order_id")
-        entrance_id = self.request.query_params.get("entrance_id")
+        order_pk = self.request.query_params.get("order_pk")
+        entrance_pk = self.request.query_params.get("entrance_pk")
 
-        if order_id:
-            queryset = Turnover.objects.filter(order__pk=order_id)
-        elif entrance_id:
-            queryset = Turnover.objects.filter(entrance__pk=entrance_id)
+        if order_pk:
+            queryset = Turnover.objects.filter(order__pk=order_pk)
+        elif entrance_pk:
+            queryset = Turnover.objects.filter(entrance__pk=entrance_pk)
 
         queryset = queryset.order_by("pk")
 
@@ -344,9 +344,9 @@ class TurnoverMaterialListView(EagerLoadingMixin, ListAPIView):
     def get_queryset(self):
         queryset = Turnover.objects.none()
 
-        material_id = self.request.query_params.get("material_id")
-        if material_id:
-            queryset = Turnover.objects.filter(material__pk=material_id)
+        material_pk = self.request.query_params.get("material_pk")
+        if material_pk:
+            queryset = Turnover.objects.filter(material__pk=material_pk)
 
         warehouse = self.request.query_params.get("warehouse")
         if warehouse:

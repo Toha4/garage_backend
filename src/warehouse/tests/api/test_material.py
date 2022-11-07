@@ -95,7 +95,7 @@ class MaterialApiTestCase(AuthorizationAPITestCase):
         turnover = TurnoverFactory(user=user, type=COMING, material=material, warehouse=warehouse, entrance=entrance)
 
         url = reverse("material-remains-category-list")
-        response = self.client.get(url, {"category": category.id})
+        response = self.client.get(url, {"category": category.pk})
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         queryset = get_queryset_materials_remains(None, None, None, "true", None, True)

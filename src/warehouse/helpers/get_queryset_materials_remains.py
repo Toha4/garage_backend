@@ -31,7 +31,7 @@ def get_queryset_materials_remains(
 
     quantity_annotate = Sum("turnovers__quantity")
     sum_annotate = Sum("turnovers__sum")
-    values = ["id", "name", "category", "category__name", "unit__name", "unit__is_precision_point", "compatbility"]
+    values = ["pk", "name", "category", "category__name", "unit__name", "unit__is_precision_point", "compatbility"]
 
     if warehouse:
         quantity_annotate = Sum("turnovers__quantity", filter=Q(turnovers__warehouse=warehouse))

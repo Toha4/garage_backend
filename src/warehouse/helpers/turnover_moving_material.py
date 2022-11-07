@@ -11,9 +11,9 @@ from ..models import Warehouse
 
 @atomic
 def turnover_moving_material(data, user):
-    material = Material.objects.get(id=data["material"])
-    warehouse_outgoing = Warehouse.objects.get(id=data["warehouse_outgoing"])
-    warehouse_incoming = Warehouse.objects.get(id=data["warehouse_incoming"])
+    material = Material.objects.get(pk=data["material"])
+    warehouse_outgoing = Warehouse.objects.get(pk=data["warehouse_outgoing"])
+    warehouse_incoming = Warehouse.objects.get(pk=data["warehouse_incoming"])
 
     date = datetime.strptime(data["date"], "%d.%m.%Y")
     price = data["price"]
