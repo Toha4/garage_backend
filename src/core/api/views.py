@@ -11,6 +11,8 @@ from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.mixins import UpdateModelMixin
 from rest_framework.response import Response
 
+from warehouse.helpers.update_car_tag_material import update_car_tag_material
+
 from ..models import Car
 from ..models import Employee
 from .serializers import CarDetailSerializer
@@ -26,7 +28,7 @@ class CarListView(GenericAPIView):
     По умолчанию списанные ТС не отображаются
 
     Filters: show_decommissioned(Bool)
-    Search's: state_number_search, name_search
+    Search's: state_number_search, name_search, general_search(state_number, name)
     """
 
     serializer_class = CarShortSerializer
@@ -50,6 +52,10 @@ class CarListView(GenericAPIView):
         name_search = self.request.query_params.get("name_search")
         if name_search:
             queryset = queryset.filter(name__icontains=name_search)
+
+        general_search = self.request.query_params.get("general_search")
+        if general_search:
+            queryset = queryset.filter(Q(name__icontains=general_search) | Q(state_number__icontains=general_search))
 
         return queryset
 
@@ -76,7 +82,18 @@ class CarDetailView(RetrieveModelMixin, UpdateModelMixin, GenericAPIView):
         return self.retrieve(self, request, *args, **kwargs)
 
     def patch(self, request, *args, **kwargs):
-        return self.partial_update(request, *args, **kwargs)
+        pk = self.kwargs.get("pk")
+        car = get_object_or_404(self.queryset, pk=pk)
+        old_name = car.name
+
+        updated_car = self.partial_update(request, *args, **kwargs)
+
+        change_tags_in_material = self.request.query_params.get("change_tags_in_material")
+        if change_tags_in_material == "true":
+            name = updated_car.data.get("name")
+            update_car_tag_material(old_name, name)
+            
+        return updated_car
 
 
 class CarTagsListView(GenericAPIView):
@@ -94,7 +111,7 @@ class EmployeeListView(GenericAPIView):
     Список работников (без создания, берем из программы Путевки)
     По умолчанию уволенные сотрудники не отображаются
 
-    Filters: show_decommissioned(Bool), type
+    Filters: show_dismissal(Bool), type
     Search's: fio_search
     """
 
