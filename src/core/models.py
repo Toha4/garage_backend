@@ -2,7 +2,7 @@ from django.db import models
 
 from .constants import EMPLOYEE_TYPE
 
-# TODO: Сделать справочник на frontе, при изменении name изменять все тэги с таким наменованием у материалов(возможно через сигнал).
+
 class Car(models.Model):
     kod_mar_in_putewka = models.IntegerField(verbose_name="Номер в программе Путевки")
     gos_nom_in_putewka = models.CharField(

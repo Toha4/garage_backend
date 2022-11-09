@@ -91,3 +91,7 @@ def get_material_remains(material_pk: int, warehouse_pk: int | None = None, date
         remains = queryset[0]["quantity_sum"]
 
     return remains
+
+
+def has_tag_materials(car_name: str):
+    return Material.objects.filter(compatbility__contains=[car_name]).exists()
