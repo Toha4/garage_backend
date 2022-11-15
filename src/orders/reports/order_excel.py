@@ -1,4 +1,3 @@
-import math
 import os
 from datetime import datetime
 
@@ -15,6 +14,7 @@ from app.helpers.reports import set_border
 from app.helpers.reports import set_cell
 
 from ..constants import COMPLETED
+from ..helpers.time_minutes_formated import time_minutes_formated
 from ..models import Order
 
 
@@ -111,7 +111,7 @@ class OrderExcelCreator:
                 row_number,
                 work.work.name,
                 str(work.quantity),
-                self.__time_minutes_formated(work.time_minutes),
+                time_minutes_formated(work.time_minutes),
                 self.__mechanics_formated(work.mechanics.all()),
             )
             row_number += 1
@@ -144,27 +144,6 @@ class OrderExcelCreator:
         set_cell(ws[f"N{row}"], name, alignment=ALIGNMENT_LEFT, wrap_text=True)
         set_cell(ws[f"O{row}"], mechanics, alignment=ALIGNMENT_LEFT, wrap_text=True)
 
-    def __time_minutes_formated(self, tyme_minutes: int) -> str:
-        time_str = ""
-
-        if not tyme_minutes:
-            return time_str
-
-        minutes = math.floor(tyme_minutes % 60)
-        hours = math.floor((tyme_minutes / 60) % 8)
-        days = math.floor(tyme_minutes / 480)
-
-        if days:
-            time_str += f"{days}д "
-
-        if hours:
-            time_str += f"{hours}ч "
-
-        if minutes:
-            time_str += f"{minutes}м"
-
-        return time_str
-
     def __mechanics_formated(self, mechanics) -> str:
         mechanics_str = ""
 
@@ -175,7 +154,7 @@ class OrderExcelCreator:
             if mechanics_str != "":
                 mechanics_str += "\n"
 
-            mechanics_str += f"{mechanic.mechanic.short_fio} {'-' if mechanic.time_minutes else '' } {self.__time_minutes_formated(mechanic.time_minutes)}"
+            mechanics_str += f"{mechanic.mechanic.short_fio} {'-' if mechanic.time_minutes else '' } {time_minutes_formated(mechanic.time_minutes)}"
 
         return mechanics_str
 

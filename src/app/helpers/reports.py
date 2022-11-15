@@ -12,7 +12,7 @@ BASE_FONT = Font(
     size=12,
 )
 
-BOLD_FONT = copy(BASE_FONT)
+BOLD_FONT = Font()
 BOLD_FONT.bold = True
 
 ALIGNMENT_CENTER = Alignment(
