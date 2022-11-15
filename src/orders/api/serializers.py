@@ -75,6 +75,7 @@ class OrderListSerializer(ModelSerializer):
             "pk",
             "number",
             "date_begin",
+            "status",
             "status_name",
             "car_name",
             "car_state_number",

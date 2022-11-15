@@ -26,6 +26,7 @@ from ..api.serializers import WorkCategoryListSerializer
 from ..api.serializers import WorkCategorySerializer
 from ..api.serializers import WorkListSerializer
 from ..api.serializers import WorkSerializer
+from ..constants import REQUEST
 from .factory import OrderFactory
 from .factory import OrderWorkFactory
 from .factory import OrderWorkMechanicFactory
@@ -99,6 +100,7 @@ class OrderSerializerTestCase(TestCase):
             "pk": order.pk,
             "number": 1,
             "date_begin": "2022-01-01 12:00",
+            "status": REQUEST,
             "status_name": "Заяка",
             "car_name": "УАЗ 111",
             "car_state_number": "А 777 АА",
