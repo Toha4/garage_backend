@@ -105,7 +105,7 @@ class WorkCategory(models.Model):
 
 
 class Work(models.Model):
-    name = models.CharField(verbose_name="Наименование", max_length=32, unique=True)
+    name = models.CharField(verbose_name="Наименование", max_length=64, unique=True)
     category = models.ForeignKey(
         WorkCategory, verbose_name="Категория", on_delete=models.PROTECT, related_name="works"
     )
