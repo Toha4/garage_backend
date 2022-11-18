@@ -364,4 +364,4 @@ class ReportOrderSerializer(ModelSerializer):
         sum = obj.turnovers_from_order.aggregate(sum=Sum("sum"))["sum"]
         if sum:
             return abs(sum)
-        return ""
+        return 0
