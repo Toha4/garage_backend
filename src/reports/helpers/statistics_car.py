@@ -26,7 +26,7 @@ def get_statistics_car(car_pk, date_begin, date_end):
 
     # Order count
     order_count = {
-        "name_param": "Заказ-нарядов, шт.",
+        "name_param": "Заказ-нарядов выполненных, шт.",
         "total": queryset.count(),
         "maintenance": queryset.filter(reason__type=TO).count(),
         "repair": queryset.filter(reason__type=REPAIR).count(),

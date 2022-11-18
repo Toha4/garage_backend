@@ -17,6 +17,7 @@ from app.helpers.database import get_period_filter_lookup
 from app.views import EagerLoadingMixin
 from core.models import Car
 from core.models import Employee
+from orders.constants import COMPLETED
 from orders.models import Order
 
 from ..helpers.get_report_cars_queryset import get_report_cars_queryset
@@ -255,7 +256,7 @@ class ReportCarOrdersListView(EagerLoadingMixin, ListAPIView):
 
         car = self.request.query_params.get("car")
         if car:
-            queryset = Order.objects.filter(car__pk=car)
+            queryset = Order.objects.filter(car__pk=car, status=COMPLETED)
 
         date_begin = self.request.query_params.get("date_begin")
         date_end = self.request.query_params.get("date_end")
