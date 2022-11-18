@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.db.models import Sum
 
 from rest_framework.serializers import DateField
 from rest_framework.serializers import DateTimeField
@@ -10,6 +11,7 @@ from core.models import Employee
 from orders.models import Order
 from orders.models import OrderWork
 from orders.models import OrderWorkMechanic
+from reports.reports.report_materials_excel import quantity_unit_formatter
 from warehouse.models import Turnover
 
 from ..helpers.get_report_mechanics_queryset import get_works_mechanics_queryset
@@ -304,3 +306,62 @@ class ReportMaterialSerializer(ModelSerializer):
             queryset = Turnover.objects.filter(pk__in=turnovers_pk).order_by("order__number")
             return ReportTurnoverShortSerializer(queryset, many=True).data
         return []
+
+
+class ReportOrderSerializer(ModelSerializer):
+    reason_name = SerializerMethodField()
+    date_begin = DateTimeField(**settings.SERIALIZER_DATE_PARAMS)
+    work_list = SerializerMethodField()
+    work_minutes_total = SerializerMethodField()
+    material_list = SerializerMethodField()
+    sum_total = SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = (
+            "pk",
+            "number",
+            "reason_name",
+            "date_begin",
+            "work_list",
+            "work_minutes_total",
+            "material_list",
+            "sum_total",
+            "note",
+        )
+        read_only_fields = ("number",)
+
+    def get_reason_name(self, obj):
+        return obj.reason.name
+
+    def get_work_list(self, obj):
+        work_list = []
+
+        for order_work in obj.order_works.all():
+            quantity = f" - {order_work.quantity} шт" if order_work.quantity > 1 else ""
+            work_list.append(f"{order_work.work.name}{quantity}")
+
+        return work_list
+
+    def get_work_minutes_total(self, obj):
+        work_minutes = obj.order_works.aggregate(work_minutes=Sum("time_minutes"))["work_minutes"]
+        if work_minutes:
+            return work_minutes
+        return 0
+
+    def get_material_list(self, obj):
+        material_list = []
+
+        for turnovers in obj.turnovers_from_order.all():
+            quantity = quantity_unit_formatter(
+                abs(turnovers.quantity), turnovers.material.unit.is_precision_point, turnovers.material.unit.name
+            )
+            material_list.append(f"{turnovers.material.name} - {quantity}")
+
+        return material_list
+
+    def get_sum_total(self, obj):
+        sum = obj.turnovers_from_order.aggregate(sum=Sum("sum"))["sum"]
+        if sum:
+            return abs(sum)
+        return ""
