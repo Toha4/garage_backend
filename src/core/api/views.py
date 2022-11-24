@@ -13,6 +13,7 @@ from rest_framework.response import Response
 
 from warehouse.helpers.update_car_tag_material import update_car_tag_material
 
+from ..helpers.sort_by_types import sort_by_types
 from ..models import Car
 from ..models import Employee
 from .serializers import CarDetailSerializer
@@ -92,7 +93,7 @@ class CarDetailView(RetrieveModelMixin, UpdateModelMixin, GenericAPIView):
         if change_tags_in_material == "true":
             name = updated_car.data.get("name")
             update_car_tag_material(old_name, name)
-            
+
         return updated_car
 
 
@@ -111,7 +112,7 @@ class EmployeeListView(GenericAPIView):
     Список работников (без создания, берем из программы Путевки)
     По умолчанию уволенные сотрудники не отображаются
 
-    Filters: show_dismissal(Bool), type
+    Filters: show_dismissal(Bool), types(list)
     Search's: fio_search
     """
 
@@ -129,9 +130,11 @@ class EmployeeListView(GenericAPIView):
         elif show_dismissal is None or show_dismissal == "False":
             queryset = queryset.filter(date_dismissal=None)
 
-        type_ = self.request.query_params.get("type")
-        if type_:
-            queryset = queryset.filter(type=type_)
+        types = self.request.query_params.get("types")
+        if types:
+            type_list = [int(type_) for type_ in types.split(",")]
+            queryset = queryset.filter(type__in=type_list)
+            queryset = sort_by_types(queryset, type_list)
 
         fio_search = self.request.query_params.get("fio_search")
         if fio_search:

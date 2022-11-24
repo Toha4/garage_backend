@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 
 from app.models import TimestampModel
 from core.constants import DRIVER
@@ -142,7 +143,7 @@ class OrderWorkMechanic(models.Model):
         "core.Employee",
         verbose_name="Слесарь",
         on_delete=models.PROTECT,
-        limit_choices_to={"type": MECHANIC},
+        limit_choices_to=Q(type=MECHANIC) | Q(type=DRIVER),
         related_name="order_works",
     )
     time_minutes = models.IntegerField(verbose_name="Затрачено времени, мин", blank=True, null=True)
