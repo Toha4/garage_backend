@@ -38,7 +38,7 @@ class EmployeeApiTestCase(AuthorizationAPITestCase):
         self.assertEqual(serializer_data, response_date_request_filter.data)
 
         # type_filter
-        response_type_filter = self.client.get(url, {"show_dismissal": "True", "type": 3})
+        response_type_filter = self.client.get(url, {"show_dismissal": "True", "types": "3"})
         self.assertEqual(status.HTTP_200_OK, response_type_filter.status_code)
         serializer_data = EmployeeShortSerializer([employee2], many=True).data
         self.assertEqual(serializer_data, response_type_filter.data)
