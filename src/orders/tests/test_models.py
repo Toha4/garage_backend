@@ -141,7 +141,7 @@ class WorkModelTestCase(TestCase):
         self.assertEqual(name_unique, True)
 
         name_max_length = self.work._meta.get_field("name").max_length
-        self.assertEqual(name_max_length, 32)
+        self.assertEqual(name_max_length, 64)
 
         category_on_delete = self.work._meta.get_field("category").remote_field.on_delete
         self.assertEqual(category_on_delete, PROTECT)

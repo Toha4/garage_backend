@@ -57,7 +57,9 @@ class Order(TimestampModel):
     post = models.ForeignKey(
         Post, verbose_name="Пост", on_delete=models.PROTECT, related_name="orders", blank=True, null=True
     )
-    car = models.ForeignKey("core.Car", verbose_name="ТС", on_delete=models.PROTECT, related_name="orders")
+    car = models.ForeignKey(
+        "core.Car", verbose_name="ТС", on_delete=models.PROTECT, related_name="orders", blank=True, null=True
+    )
     driver = models.ForeignKey(
         "core.Employee",
         verbose_name="Водитель",

@@ -89,10 +89,14 @@ class OrderListSerializer(ModelSerializer):
         return dict((x, y) for x, y in ORDER_STATUS).get(obj.status)
 
     def get_car_name(self, obj):
-        return obj.car.name
+        if obj.car:
+            return obj.car.name
+        return "-"
 
     def get_car_state_number(self, obj):
-        return obj.car.state_number
+        if obj.car:
+            return obj.car.state_number
+        return "БЕЗ ТС"
 
     def get_post_name(self, obj):
         if obj.post:
@@ -179,7 +183,9 @@ class OrderDetailSerializer(WritableNestedModelSerializer):
         read_only_fields = ("number",)
 
     def get_car_name(self, obj):
-        return obj.car.name
+        if obj.car:
+            return obj.car.name
+        return ""
 
     def validate(self, data):
         order_works = data.get("order_works")
