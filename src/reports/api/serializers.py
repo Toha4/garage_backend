@@ -339,7 +339,11 @@ class ReportOrderSerializer(ModelSerializer):
 
         for order_work in obj.order_works.all():
             quantity = f" - {order_work.quantity} шт" if order_work.quantity > 1 else ""
-            work_list.append(f"{order_work.work.name}{quantity}")
+
+            mechanics_name = [mechanic.mechanic.short_fio for mechanic in order_work.mechanics.all()]
+            mechanics = f" ({', '.join(mechanics_name)})" if mechanics_name else ""
+
+            work_list.append(f"{order_work.work.name}{quantity}{mechanics}")
 
         return work_list
 
