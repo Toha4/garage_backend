@@ -24,6 +24,7 @@ class CarDetailSerializer(ModelSerializer):
     date_decommissioned = DateField(**settings.SERIALIZER_DATE_PARAMS, required=False, allow_null=True, read_only=True)
     driver_pk = SerializerMethodField()
     has_tag_material = SerializerMethodField()
+    car_task_count = SerializerMethodField()
 
     class Meta:
         model = Car
@@ -37,6 +38,7 @@ class CarDetailSerializer(ModelSerializer):
             "driver_pk",
             "date_decommissioned",
             "has_tag_material",
+            "car_task_count",
         )
         read_only_fields = (
             "pk",
@@ -56,6 +58,9 @@ class CarDetailSerializer(ModelSerializer):
 
     def get_has_tag_material(self, obj):
         return has_tag_materials(obj.name)
+
+    def get_car_task_count(self, obj):
+        return obj.tasks.filter(is_completed=False).count()
 
 
 class CarTagSerializer(ModelSerializer):
