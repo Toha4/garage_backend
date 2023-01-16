@@ -150,6 +150,7 @@ class OrderSerializerTestCase(TestCase):
             "post": post.pk,
             "car": car.pk,
             "car_name": car.name,
+            "car_task_count": 0,
             "driver": driver.pk,
             "responsible": responsible.pk,
             "odometer": 123000,

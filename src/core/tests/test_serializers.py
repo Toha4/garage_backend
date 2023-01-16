@@ -29,6 +29,7 @@ class CarSerializerTestCase(TestCase):
             "driver_pk": None,
             "date_decommissioned": None,
             "has_tag_material": False,
+            "car_task_count": 0,
         }
         self.assertEqual(expected_data, data)
 

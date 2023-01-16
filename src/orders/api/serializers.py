@@ -156,6 +156,7 @@ class OrderDetailSerializer(WritableNestedModelSerializer):
     date_end = DateTimeField(**settings.SERIALIZER_DATETIME_PARAMS, required=False, allow_null=True)
     order_works = OrderWorkSerializer(many=True)
     car_name = SerializerMethodField()
+    car_task_count = SerializerMethodField()
     turnovers_from_order = TurnoverOrderNestedWriteSerializer(many=True)
 
     class Meta:
@@ -173,6 +174,7 @@ class OrderDetailSerializer(WritableNestedModelSerializer):
             "post",
             "car",
             "car_name",
+            "car_task_count",
             "driver",
             "responsible",
             "odometer",
@@ -186,6 +188,11 @@ class OrderDetailSerializer(WritableNestedModelSerializer):
         if obj.car:
             return obj.car.name
         return ""
+
+    def get_car_task_count(self, obj):
+        if obj.car:
+            return obj.car.tasks.filter(is_completed=False).count()
+        return 0
 
     def validate(self, data):
         order_works = data.get("order_works")
