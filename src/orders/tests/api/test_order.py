@@ -47,30 +47,32 @@ class OrderApiTestCase(AuthorizationAPITestCase):
         car2 = CarFactory(gos_nom_in_putewka=2, name="КАМАЗ", state_number="Б 666 ББ")
         driver = EmployeeFactory(type=1, position="Водитель")
         responsible = EmployeeFactory(number_in_kadry=2, type=3, position="Начальник")
+
         order1 = OrderFactory(
             user=user,
             status=REQUEST,
-            reason=reason1,
             post=post,
             car=car1,
             driver=driver,
             responsible=responsible,
             date_begin="2022-01-01 12:00",
         )
+        order1.reasons.add(reason1)
+
         order2 = OrderFactory(
             user=user,
             status=COMPLETED,
-            reason=reason1,
             post=post,
             car=car1,
             driver=driver,
             responsible=responsible,
             date_begin="2022-01-15 08:00",
         )
+        order2.reasons.add(reason1)
+
         order3 = OrderFactory(
             user=user,
             status=COMPLETED,
-            reason=reason2,
             post=post,
             car=car2,
             driver=driver,
@@ -78,6 +80,7 @@ class OrderApiTestCase(AuthorizationAPITestCase):
             date_begin="2022-01-17 08:00",
             note="Поломка",
         )
+        order3.reasons.add(reason2)
 
         url = reverse("order-list")
         response = self.client.get(url)
@@ -96,7 +99,7 @@ class OrderApiTestCase(AuthorizationAPITestCase):
         # reason_type_filter
         response_reasons_filter = self.client.get(url, {"reason_type": reason1.type})
         self.assertEqual(status.HTTP_200_OK, response_reasons_filter.status_code)
-        queryset = Order.objects.filter(reason__type__in=[reason1.type])
+        queryset = Order.objects.filter(reasons__type__in=[reason1.type])
         serializer_data = {
             "links": {"next": None, "previous": None},
             "numbers": {"current": 1, "previous": None, "next": None},
@@ -229,7 +232,7 @@ class OrderApiTestCase(AuthorizationAPITestCase):
         # Order only
         payload = {
             "status": REQUEST,
-            "reason": reason.pk,
+            "reasons": [reason.pk],
             "date_begin": "19.09.2022 12:00",
             "date_end": None,
             "post": post.pk,
@@ -369,7 +372,9 @@ class OrderApiTestCase(AuthorizationAPITestCase):
         car = CarFactory()
         driver = EmployeeFactory(type=1, position="Водитель")
         responsible = EmployeeFactory(number_in_kadry=2, type=3, position="Начальник")
-        order = OrderFactory(user=user, reason=reason, post=post, car=car, driver=driver, responsible=responsible)
+
+        order = OrderFactory(user=user, post=post, car=car, driver=driver, responsible=responsible)
+        order.reasons.add(reason)
 
         work_category = WorkCategoryFactory()
         work = WorkFactory(category=work_category)
@@ -414,7 +419,9 @@ class OrderApiTestCase(AuthorizationAPITestCase):
         driver2 = EmployeeFactory(number_in_kadry=2, type=1, position="Водитель 2")
         responsible1 = EmployeeFactory(number_in_kadry=3, type=3, position="Начальник")
         responsible2 = EmployeeFactory(number_in_kadry=4, type=3, position="Начальник 2")
-        order = OrderFactory(user=user, reason=reason1, post=post1, car=car1, driver=driver1, responsible=responsible1)
+
+        order = OrderFactory(user=user, post=post1, car=car1, driver=driver1, responsible=responsible1)
+        order.reasons.add(reason1)
 
         # Aded data
         work_category = WorkCategoryFactory()
@@ -434,7 +441,7 @@ class OrderApiTestCase(AuthorizationAPITestCase):
         payload = {
             "number": 2,
             "status": COMPLETED,
-            "reason": reason2.pk,
+            "reasons": [reason2.pk],
             "date_begin": "19.09.2022 14:00",
             "date_end": "20.09.2022 17:00",
             "post": post2.pk,
@@ -470,23 +477,23 @@ class OrderApiTestCase(AuthorizationAPITestCase):
         response = self.client.put(url, data=json.dumps(payload), content_type="application/json")
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
-        reason_result = Order.objects.get(pk=order.pk)
-        self.assertNotEqual(reason_result.number, payload["number"])
-        self.assertEqual(reason_result.status, payload["status"])
-        self.assertEqual(reason_result.reason.pk, payload["reason"])
+        order_result = Order.objects.get(pk=order.pk)
+        self.assertNotEqual(order_result.number, payload["number"])
+        self.assertEqual(order_result.status, payload["status"])
+        self.assertEqual([reason2.pk], payload["reasons"])
         self.assertEqual(
-            convert_to_localtime(reason_result.date_begin).strftime("%d.%m.%Y %H:%M"), payload["date_begin"]
+            convert_to_localtime(order_result.date_begin).strftime("%d.%m.%Y %H:%M"), payload["date_begin"]
         )
-        self.assertEqual(convert_to_localtime(reason_result.date_end).strftime("%d.%m.%Y %H:%M"), payload["date_end"])
-        self.assertEqual(reason_result.post.pk, payload["post"])
-        self.assertEqual(reason_result.car.pk, payload["car"])
-        self.assertEqual(reason_result.driver.pk, payload["driver"])
-        self.assertEqual(reason_result.responsible.pk, payload["responsible"])
-        self.assertEqual(reason_result.odometer, payload["odometer"])
-        self.assertEqual(reason_result.note, payload["note"])
+        self.assertEqual(convert_to_localtime(order_result.date_end).strftime("%d.%m.%Y %H:%M"), payload["date_end"])
+        self.assertEqual(order_result.post.pk, payload["post"])
+        self.assertEqual(order_result.car.pk, payload["car"])
+        self.assertEqual(order_result.driver.pk, payload["driver"])
+        self.assertEqual(order_result.responsible.pk, payload["responsible"])
+        self.assertEqual(order_result.odometer, payload["odometer"])
+        self.assertEqual(order_result.note, payload["note"])
 
-        self.assertEqual(reason_result.order_works.all().count(), 1)
-        self.assertEqual(reason_result.turnovers_from_order.all().count(), 1)
+        self.assertEqual(order_result.order_works.all().count(), 1)
+        self.assertEqual(order_result.turnovers_from_order.all().count(), 1)
 
     def test_delete(self):
         user = get_test_user()
@@ -496,7 +503,9 @@ class OrderApiTestCase(AuthorizationAPITestCase):
         car = CarFactory()
         driver = EmployeeFactory(type=1, position="Водитель")
         responsible = EmployeeFactory(number_in_kadry=2, type=3, position="Начальник")
-        order = OrderFactory(user=user, reason=reason, post=post, car=car, driver=driver, responsible=responsible)
+
+        order = OrderFactory(user=user, post=post, car=car, driver=driver, responsible=responsible)
+        order.reasons.add(reason)
 
         url = reverse("order-detail", kwargs={"pk": order.pk})
         response = self.client.delete(url)

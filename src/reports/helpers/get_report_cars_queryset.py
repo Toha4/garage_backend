@@ -18,7 +18,7 @@ def get_report_cars_queryset(date_begin: str, date_end: str, reason_type: int | 
     )
 
     if reason_type:
-        filter_orders = filter_orders & Q(orders__reason__type=reason_type)
+        filter_orders = filter_orders & Q(orders__reasons__type=reason_type)
 
     work_minutes_total = Car.objects.annotate(
         work_minutes_total=Sum("orders__order_works__time_minutes", filter=filter_orders)

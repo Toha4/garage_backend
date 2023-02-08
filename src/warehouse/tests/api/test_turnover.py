@@ -172,13 +172,13 @@ class TurnoverApiTestCase(AuthorizationAPITestCase):
         order = OrderFactory(
             user=user,
             status=COMPLETED,
-            reason=reason,
             post=post,
             car=car,
             driver=driver,
             responsible=responsible,
             date_begin="2022-01-15 08:00",
         )
+        order.reasons.add(reason)
 
         turnover_order = TurnoverFactory(user=user, type=EXPENSE, material=material, warehouse=warehouse, order=order)
 
@@ -204,16 +204,17 @@ class TurnoverApiTestCase(AuthorizationAPITestCase):
         post = PostFactory()
         car = CarFactory()
         driver = EmployeeFactory(type=1, position="Водитель")
+
         order = OrderFactory(
             user=user,
             status=WORK,
-            reason=reason,
             post=post,
             car=car,
             driver=driver,
             responsible=responsible,
             date_begin="2022-01-15 08:00",
         )
+        order.reasons.add(reason)
 
         turnover_order = TurnoverFactory(user=user, type=EXPENSE, material=material, warehouse=warehouse, order=order)
 
@@ -246,13 +247,13 @@ class TurnoverApiTestCase(AuthorizationAPITestCase):
         order = OrderFactory(
             user=user,
             status=WORK,
-            reason=reason,
             post=post,
             car=car,
             driver=driver,
             responsible=responsible,
             date_begin="2022-01-01 08:00",
         )
+        order.reasons.add(reason)
 
         turnover3 = TurnoverFactory(user=user, type=EXPENSE, material=material, warehouse=warehouse, order=order)
 

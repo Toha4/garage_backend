@@ -93,7 +93,8 @@ class OrderSerializerTestCase(TestCase):
         car = CarFactory()
         driver = EmployeeFactory(type=1, position="Водитель")
         responsible = EmployeeFactory(number_in_kadry=2, type=3, position="Начальник")
-        order = OrderFactory(user=user, reason=reason, post=post, car=car, driver=driver, responsible=responsible)
+        order = OrderFactory(user=user, post=post, car=car, driver=driver, responsible=responsible)
+        order.reasons.add(reason)
 
         data = OrderListSerializer(order).data
         expected_data = {
@@ -118,7 +119,8 @@ class OrderSerializerTestCase(TestCase):
         car = CarFactory()
         driver = EmployeeFactory(type=1, position="Водитель")
         responsible = EmployeeFactory(number_in_kadry=2, type=3, position="Начальник")
-        order = OrderFactory(user=user, reason=reason, post=post, car=car, driver=driver, responsible=responsible)
+        order = OrderFactory(user=user, post=post, car=car, driver=driver, responsible=responsible)
+        order.reasons.add(reason)
 
         work_category = WorkCategoryFactory()
         work = WorkFactory(category=work_category)
@@ -144,7 +146,7 @@ class OrderSerializerTestCase(TestCase):
             "updated": convert_to_localtime(order.updated).strftime("%d.%m.%Y %H:%M"),
             "number": 1,
             "status": 1,
-            "reason": reason.pk,
+            "reasons": [reason.pk],
             "date_begin": "2022-01-01 12:00",
             "date_end": None,
             "post": post.pk,

@@ -104,7 +104,7 @@ class OrderListSerializer(ModelSerializer):
         return ""
 
     def get_reason_name(self, obj):
-        return obj.reason.name
+        return ', '.join([x.name for x in obj.reasons.all()])
 
 
 class OrderWorkMechanickSerializer(ModelSerializer):
@@ -168,7 +168,7 @@ class OrderDetailSerializer(WritableNestedModelSerializer):
             "updated",
             "number",
             "status",
-            "reason",
+            "reasons",
             "date_begin",
             "date_end",
             "post",

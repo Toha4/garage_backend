@@ -145,7 +145,7 @@ class OrderListView(EagerLoadingMixin, ListAPIView, CreateModelMixin):
 
         reason_type = self.request.query_params.get("reason_type")
         if reason_type:
-            queryset = queryset.filter(reason__type=reason_type)
+            queryset = queryset.filter(reasons__type=reason_type)
 
         statuses = self.request.query_params.get("statuses")
         if statuses:
