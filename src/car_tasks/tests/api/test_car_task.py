@@ -39,14 +39,16 @@ class CarApiTestCase(AuthorizationAPITestCase):
 
         reason = ReasonFactory()
         post = PostFactory()
+
         order = OrderFactory(
             user=user,
             status=REQUEST,
-            reason=reason,
             post=post,
             car=car2,
             date_begin="2022-01-01 12:00",
         )
+        order.reasons.add(reason)
+
         car_task4 = CarTaskFactory(
             user=user,
             car=car2,

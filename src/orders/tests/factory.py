@@ -29,7 +29,6 @@ class OrderFactory(DjangoModelFactory):
     user = None
     number = None
     status = REQUEST
-    reason = None
     date_begin = "2022-01-01 12:00"
     date_end = None
     post = None

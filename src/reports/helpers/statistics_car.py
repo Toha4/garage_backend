@@ -28,9 +28,9 @@ def get_statistics_car(car_pk, date_begin, date_end):
     order_count = {
         "name_param": "Заказ-нарядов выполненных, шт.",
         "total": queryset.count(),
-        "maintenance": queryset.filter(reason__type=TO).count(),
-        "repair": queryset.filter(reason__type=REPAIR).count(),
-        "other": queryset.filter(reason__type=OTHER).count(),
+        "maintenance": queryset.filter(reasons__type=TO).count(),
+        "repair": queryset.filter(reasons__type=REPAIR).count(),
+        "other": queryset.filter(reasons__type=OTHER).count(),
     }
     statistic.append(order_count)
 
@@ -79,7 +79,7 @@ def get_statistics_car(car_pk, date_begin, date_end):
 
 def __get_data_last_order(queryset, type_reason):
     if type_reason:
-        queryset = queryset.filter(reason__type=type_reason)
+        queryset = queryset.filter(reasons__type=type_reason)
 
     order = queryset.order_by("date_begin").last()
     if order:
@@ -89,7 +89,7 @@ def __get_data_last_order(queryset, type_reason):
 
 def __get_last_odometr(queryset, type_reason):
     if type_reason:
-        queryset = queryset.filter(reason__type=type_reason)
+        queryset = queryset.filter(reasons__type=type_reason)
 
     order = queryset.order_by("date_begin").last()
     if order:
@@ -99,7 +99,7 @@ def __get_last_odometr(queryset, type_reason):
 
 def __get_work_hours(queryset, type_reason):
     if type_reason:
-        queryset = queryset.filter(reason__type=type_reason)
+        queryset = queryset.filter(reasons__type=type_reason)
 
     work_minutes = queryset.aggregate(work_minutes=Sum("order_works__time_minutes"))["work_minutes"]
     if work_minutes:
@@ -109,7 +109,7 @@ def __get_work_hours(queryset, type_reason):
 
 def __get_sum_materials(queryset, type_reason):
     if type_reason:
-        queryset = queryset.filter(reason__type=type_reason)
+        queryset = queryset.filter(reasons__type=type_reason)
 
     sum = queryset.aggregate(sum=Sum("turnovers_from_order__sum"))["sum"]
     if sum:

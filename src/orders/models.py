@@ -46,10 +46,9 @@ class Order(TimestampModel):
     )
     number = models.IntegerField(verbose_name="Номер", unique=True)
     status = models.IntegerField(verbose_name="Статус", choices=ORDER_STATUS)
-    reason = models.ForeignKey(
+    reasons = models.ManyToManyField(
         Reason,
-        verbose_name="Причина",
-        on_delete=models.PROTECT,
+        verbose_name="Причины",
         related_name="orders",
     )
     date_begin = models.DateTimeField(verbose_name="Дата и время начала работ")

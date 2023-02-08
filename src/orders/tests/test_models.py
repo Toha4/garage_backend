@@ -54,7 +54,9 @@ class OrderModelTestCase(TestCase):
         car = CarFactory()
         driver = EmployeeFactory(type=1, position="Водитель")
         responsible = EmployeeFactory(number_in_kadry=2, type=3, position="Начальник")
-        self.order = OrderFactory(user=user, reason=reason, post=post, car=car, driver=driver, responsible=responsible)
+        
+        self.order = OrderFactory(user=user, post=post, car=car, driver=driver, responsible=responsible)
+        self.order.reasons.add(reason)
 
     def test_fields(self):
         order = Order.objects.first()
@@ -66,9 +68,6 @@ class OrderModelTestCase(TestCase):
 
         status_choices = order._meta.get_field("status").choices
         self.assertEqual(status_choices, ORDER_STATUS)
-
-        reason_on_delete = order._meta.get_field("reason").remote_field.on_delete
-        self.assertEqual(reason_on_delete, PROTECT)
 
         date_begin_null = order._meta.get_field("date_begin").null
         self.assertEqual(date_begin_null, False)
@@ -153,7 +152,10 @@ class OrderWorkModelTestCase(TestCase):
 
         reason = ReasonFactory()
         car = CarFactory()
-        order = OrderFactory(user=user, reason=reason, car=car)
+
+        order = OrderFactory(user=user, car=car)
+        order.reasons.add(reason)
+
         work_category = WorkCategoryFactory()
         work = WorkFactory(category=work_category)
         self.order_work = OrderWorkFactory(order=order, work=work)
@@ -178,7 +180,10 @@ class OrderWorkMechanicModelTestCase(TestCase):
 
         reason = ReasonFactory()
         car = CarFactory()
-        order = OrderFactory(user=user, reason=reason, car=car)
+
+        order = OrderFactory(user=user, car=car)
+        order.reasons.add(reason)
+
         work_category = WorkCategoryFactory()
         work = WorkFactory(category=work_category)
         order_work = OrderWorkFactory(order=order, work=work)

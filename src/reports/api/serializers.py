@@ -332,7 +332,7 @@ class ReportOrderSerializer(ModelSerializer):
         read_only_fields = ("number",)
 
     def get_reason_name(self, obj):
-        return obj.reason.name
+        return ', '.join([x.name for x in obj.reasons.all()])
 
     def get_work_list(self, obj):
         work_list = []
