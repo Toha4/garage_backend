@@ -61,8 +61,8 @@ class OrderExcelCreator:
         if order and order.date_end:
             ws["D4"] = order.date_end.strftime("%d.%m.%Y %H:%M")
 
-        if order and order.reason:
-            ws["G4"] = order.reason.name
+        if order and order.reasons:
+            ws["G4"] = ', '.join([x.name for x in order.reasons.all()])
 
         if order and order.car:
             ws["A7"] = order.car.state_number
