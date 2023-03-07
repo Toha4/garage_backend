@@ -1,16 +1,19 @@
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
+from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.generics import ListAPIView
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.mixins import DestroyModelMixin
 from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.mixins import UpdateModelMixin
+from rest_framework.response import Response
 
 from app.views import EagerLoadingMixin
 
 from ..models import CarTask
+from ..reports.car_task_excel import car_tasks_excel
 from .serializers import CarTaskListSerializer
 from .serializers import CarTaskSerializer
 
@@ -82,3 +85,20 @@ class CarTaskDetailView(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin,
 
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
+
+
+class CarTaskExcelView(CarTaskListView):
+    """Экспорт в Excel cписок планируемых задач"""
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+
+        data = serializer.data
+        if data:
+            return Response(
+                {"file": request.build_absolute_uri(car_tasks_excel(data))},
+                status=status.HTTP_200_OK,
+            )
+
+        return Response({"errors": {"file": ("Ошибка формирования файла!")}}, status=status.HTTP_400_BAD_REQUEST)
