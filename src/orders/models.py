@@ -63,7 +63,7 @@ class Order(TimestampModel):
         "core.Employee",
         verbose_name="Водитель",
         on_delete=models.PROTECT,
-        limit_choices_to={"type": DRIVER},
+        limit_choices_to=Q(type=DRIVER) | Q(type=MANAGEMENT),
         related_name="orders_from_driver",
         blank=True,
         null=True,
