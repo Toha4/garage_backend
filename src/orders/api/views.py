@@ -143,6 +143,14 @@ class OrderListView(EagerLoadingMixin, ListAPIView, CreateModelMixin):
     def get_queryset(self):
         queryset = super().get_queryset()
 
+        page_size = self.request.query_params.get("page_size")
+        if page_size:
+            self.pagination_class.page_size = int(page_size)
+
+        car = self.request.query_params.get("car")
+        if car:
+            queryset = queryset.filter(car=car)
+
         reason_type = self.request.query_params.get("reason_type")
         if reason_type:
             queryset = queryset.filter(reasons__type=reason_type)
@@ -164,6 +172,14 @@ class OrderListView(EagerLoadingMixin, ListAPIView, CreateModelMixin):
         sort_order = self.request.query_params.get("sortOrder")
         if sort_field and sort_order:
             sort_order = "-" if sort_order == "descend" else ""
+
+            if sort_field == "car_name":
+                sort_field = "car__name"
+            elif sort_field == "car_state_number":
+                sort_field = "car__state_number"
+            elif sort_field == "reason":
+                sort_field = "reasons__name"
+
             queryset = queryset.order_by(f"{sort_order}{sort_field}", "pk")
 
         return queryset
