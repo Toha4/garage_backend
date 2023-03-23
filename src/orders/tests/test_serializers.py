@@ -105,6 +105,7 @@ class OrderSerializerTestCase(TestCase):
             "status_name": "Заяка",
             "car_name": "УАЗ 111",
             "car_state_number": "А 777 АА",
+            "odometer": 123000,
             "post_name": "Бокс 1",
             "reason_name": "ТО",
             "note": "Тестовый заказ-наряд",

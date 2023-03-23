@@ -79,6 +79,7 @@ class OrderListSerializer(ModelSerializer):
             "status_name",
             "car_name",
             "car_state_number",
+            "odometer",
             "post_name",
             "reason_name",
             "note",
